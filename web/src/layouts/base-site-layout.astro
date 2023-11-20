@@ -1,0 +1,35 @@
+---
+import BaseHead from "../components/base-site-head.astro";
+
+interface Props {
+  title: string;
+  description: string;
+}
+
+const { title, description } = Astro.props;
+---
+
+<html lang="en">
+  <head>
+    <BaseHead title={title} description={description} />
+
+    <script type="module" is:inline>
+      const isDarkMode = localStorage.getItem("darkMode") === "true";
+
+      if (isDarkMode) {
+        document.body.classList.add("dark");
+      }
+
+      window.addEventListener("dark-mode-changed", (event) => {
+        const { message } = event.detail;
+        const { isDarkMode } = event.detail;
+
+        if (isDarkMode) document.body.classList.add("dark");
+        else document.body.classList.remove("dark");
+      });
+    </script>
+  </head>
+  <body class="">
+    <slot />
+  </body>
+</html>

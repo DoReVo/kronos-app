@@ -1,0 +1,38 @@
+{
+  "name": "@kronos/web",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro check && astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/check": "^0.9.4",
+    "@astrojs/react": "^4.1.2",
+    "@kronos/common": "^1.0.0",
+    "@tanstack/react-query": "^5.62.8",
+    "@types/react": "^19.0.2",
+    "@types/react-dom": "^19.0.2",
+    "@uidotdev/usehooks": "^2.4.1",
+    "astro": "^5.1.1",
+    "jotai": "^2.10.4",
+    "ky": "^1.7.4",
+    "luxon": "^3.5.0",
+    "react": "^19.0.0",
+    "react-aria": "^3.36.0",
+    "react-aria-components": "^1.5.0",
+    "react-dom": "^19.0.0",
+    "typescript": "^5.7.2"
+  },
+  "devDependencies": {
+    "@iconify/json": "^2.2.295",
+    "@unocss/reset": "^0.65.2",
+    "clsx": "^2.1.1",
+    "prettier": "^3.4.2",
+    "prettier-plugin-astro": "^0.14.1",
+    "unocss": "^0.65.2"
+  }
+}

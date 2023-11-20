@@ -1,0 +1,13 @@
+---
+import MainContentLayout from "../layouts/main-content-layout.astro";
+import BaseSiteLayout from "../layouts/base-site-layout.astro";
+import { PrayerTimePage } from "./index.tsx";
+---
+
+<BaseSiteLayout title="Waktu Solat" description="Waktu Solat Application">
+  <MainContentLayout>
+    <div class="flex flex-col place-content-center min-h-screen items-center">
+      <PrayerTimePage client:only="react" />
+    </div>
+  </MainContentLayout>
+</BaseSiteLayout>
