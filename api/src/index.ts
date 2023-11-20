@@ -33,10 +33,4 @@ server.get("/time", async (c) => {
   return c.json(response);
 });
 
-server.get("/test", async (c) => {
-  const kvs = await c.env.KronosKV.list();
-  console.log(kvs);
-  return c.json({ message: "ok" });
-});
-
 export default server;
