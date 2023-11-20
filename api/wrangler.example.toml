@@ -1,0 +1,19 @@
+name = "api"
+compatibility_date = "2023-01-01"
+
+[dev]
+ip = "0.0.0.0"
+port = 4305
+
+# [vars]
+# MY_VARIABLE = "production_value"
+[[kv_namespaces]]
+# binding = "Name"
+# id = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+# [[r2_buckets]]
+# binding = "MY_BUCKET"
+# bucket_name = "my-bucket"
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "my-database"
+# database_id = ""
