@@ -46,8 +46,6 @@ async function _fetchYearlyForZone(zone: string) {
   try {
     const url = new URL(BASE_API_URL);
 
-    console.log("Fetching data for", zone);
-
     url.search = new URLSearchParams({
       r: "esolatApi/takwimsolat",
       period: "year",
