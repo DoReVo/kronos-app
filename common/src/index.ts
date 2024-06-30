@@ -1,3 +1,4 @@
-export type TimeSlot = "subuh" | "zohor" | "asar" | "maghrib" | "isyak";
-
-const message = "hello";
+export interface PrayerTime {
+  Name: "imsak" | "subuh" | "syuruk" | "zohor" | "asar" | "maghrib" | "isyak";
+  Time: string;
+}

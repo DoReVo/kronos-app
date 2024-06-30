@@ -6,6 +6,69 @@ import {
   presetWebFonts,
 } from "unocss";
 
+const x = {
+  thistle: {
+    DEFAULT: "#cdb4db",
+    100: "#2b1a36",
+    200: "#57346b",
+    300: "#824ea1",
+    400: "#a87ec1",
+    500: "#cdb4db",
+    600: "#d6c2e2",
+    700: "#e0d2e9",
+    800: "#ebe1f0",
+    900: "#f5f0f8",
+  },
+  fairy_tale: {
+    DEFAULT: "#ffc8dd",
+    100: "#5b0023",
+    200: "#b60046",
+    300: "#ff116c",
+    400: "#ff6ca4",
+    500: "#ffc8dd",
+    600: "#ffd2e3",
+    700: "#ffddea",
+    800: "#ffe9f1",
+    900: "#fff4f8",
+  },
+  carnation_pink: {
+    DEFAULT: "#ffafcc",
+    100: "#56001f",
+    200: "#ab003f",
+    300: "#ff025f",
+    400: "#ff5895",
+    500: "#ffafcc",
+    600: "#ffbed6",
+    700: "#ffcee0",
+    800: "#ffdeea",
+    900: "#ffeff5",
+  },
+  uranian_blue: {
+    DEFAULT: "#bde0fe",
+    100: "#012f57",
+    200: "#035eaf",
+    300: "#0f8dfb",
+    400: "#66b6fd",
+    500: "#bde0fe",
+    600: "#cbe6fe",
+    700: "#d8ecfe",
+    800: "#e5f3ff",
+    900: "#f2f9ff",
+  },
+  light_sky_blue: {
+    DEFAULT: "#a2d2ff",
+    100: "#002b54",
+    200: "#0056a7",
+    300: "#0082fb",
+    400: "#50aaff",
+    500: "#a2d2ff",
+    600: "#b6dcff",
+    700: "#c8e4ff",
+    800: "#daedff",
+    900: "#edf6ff",
+  },
+};
+
 export default defineConfig({
   presets: [
     presetUno(),
@@ -21,16 +84,27 @@ export default defineConfig({
     }),
   ],
   theme: {
-    /** Color palettes
-     * https://coolors.co/palette/00111c-001523-001a2c-002137-00253e-002945-002e4e-003356-003a61-00406c
-     */
     colors: {
       canvas: {
-        DEFAULT: "#ffffff",
-        dark: "#001A2C",
+        DEFAULT: "#f8fafc",
+        dark: "#1d3557",
       },
       brand: { DEFAULT: "#003A61", light: "#00497A" },
       text_white: "#edf2f4",
+      main: {
+        primary: {
+          DEFAULT: "#a2d2ff",
+          100: "#002b54",
+          200: "#0056a7",
+          300: "#0082fb",
+          400: "#50aaff",
+          500: "#a2d2ff",
+          600: "#b6dcff",
+          700: "#c8e4ff",
+          800: "#daedff",
+          900: "#edf6ff",
+        },
+      },
     },
   },
 });
