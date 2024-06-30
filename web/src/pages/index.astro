@@ -2,18 +2,13 @@
 import MainContentLayout from "../layouts/main-content-layout.astro";
 import BaseSiteLayout from "../layouts/base-site-layout.astro";
 import { TimeCard } from "../components/time-card.tsx";
+import { PrayerTimePage } from "./index.tsx";
 ---
 
 <BaseSiteLayout title="Waktu Solat" description="Waktu Solat Application">
   <MainContentLayout>
     <div class="mt-12 flex flex-col items-center justify-start gap-y-3 px-2">
-      <TimeCard client:load Name="imsak" Time="09:00" />
-      <TimeCard client:load Name="subuh" Time="09:00" />
-      <TimeCard client:load Name="syuruk" Time="09:00" />
-      <TimeCard client:load Name="zohor" Time="09:00" />
-      <TimeCard client:load Name="asar" Time="09:00" />
-      <TimeCard client:load Name="maghrib" Time="09:00" />
-      <TimeCard client:load Name="isyak" Time="09:00" />
+      <PrayerTimePage client:load />
     </div>
   </MainContentLayout>
 </BaseSiteLayout>
