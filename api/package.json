@@ -5,6 +5,7 @@
     "deploy": "wrangler deploy --minify src/index.ts"
   },
   "dependencies": {
+    "@kronos/common": "^1.0.0",
     "@types/luxon": "^3.3.4",
     "got": "^13.0.0",
     "hono": "^3.9.2",
@@ -14,6 +15,6 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20230914.0",
-    "wrangler": "^3.14.0"
+    "wrangler": "^3.62.0"
   }
 }

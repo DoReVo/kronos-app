@@ -1,3 +1,4 @@
+import { PrayerTime } from "@kronos/common";
 import Joi from "joi";
 import { DateTime } from "luxon";
 
@@ -65,16 +66,24 @@ async function _fetchYearlyForZone(zone: string) {
     }
 
     const formattedData = (validatedData?.value as any)?.prayerTime?.map(
-      (day: any) => ({
-        date: DateTime.fromFormat(day.date, "dd-MMM-yyyy").toISODate(),
-        imsak: DateTime.fromFormat(day.imsak, "TT").toFormat("t"),
-        fajr: DateTime.fromFormat(day.fajr, "TT").toFormat("t"),
-        syuruk: DateTime.fromFormat(day.syuruk, "TT").toFormat("t"),
-        dhuhr: DateTime.fromFormat(day.dhuhr, "TT").toFormat("t"),
-        asr: DateTime.fromFormat(day.asr, "TT").toFormat("t"),
-        maghrib: DateTime.fromFormat(day.maghrib, "TT").toFormat("t"),
-        isha: DateTime.fromFormat(day.isha, "TT").toFormat("t"),
-      })
+      (day: any) => {
+        let dayData: {
+          [K in PrayerTime["Name"]]: string;
+        } & { date: string };
+
+        dayData = {
+          date: DateTime.fromFormat(day.date, "dd-MMM-yyyy").toISODate()!,
+          imsak: DateTime.fromFormat(day.imsak, "TT").toFormat("t"),
+          subuh: DateTime.fromFormat(day.fajr, "TT").toFormat("t"),
+          syuruk: DateTime.fromFormat(day.syuruk, "TT").toFormat("t"),
+          zohor: DateTime.fromFormat(day.dhuhr, "TT").toFormat("t"),
+          asar: DateTime.fromFormat(day.asr, "TT").toFormat("t"),
+          maghrib: DateTime.fromFormat(day.maghrib, "TT").toFormat("t"),
+          isyak: DateTime.fromFormat(day.isha, "TT").toFormat("t"),
+        };
+
+        return dayData;
+      },
     );
 
     return formattedData;
