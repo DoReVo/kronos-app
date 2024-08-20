@@ -23,8 +23,8 @@ interface MySelectProps<T extends object>
   label?: string;
   description?: string;
   errorMessage?: string | ((validation: ValidationResult) => string);
-  items?: Iterable<T>;
   children: React.ReactNode | ((item: T) => React.ReactNode);
+  items: Iterable<T>;
 }
 
 export function Select<T extends object>({
@@ -35,12 +35,13 @@ export function Select<T extends object>({
   items,
   ...props
 }: MySelectProps<T>) {
+  if (!items) throw new Error("Items must be given");
+
   return (
     <RASelect {...props} className="">
       <Label>{label}</Label>
       <Button className="bg-purple-500 text-white px-4 py-2 rounded w-70 text-center">
         <SelectValue />
-        <span aria-hidden="true">▼</span>
       </Button>
       {description && <Text slot="description">{description}</Text>}
       <FieldError>{errorMessage}</FieldError>
