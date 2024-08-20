@@ -70,20 +70,6 @@ function ZoneSelect() {
     return listOfItems?.find((i) => i.id === key);
   }, [key]);
 
-  const [count, setCount] = useState(0);
-
-  useEffect(() => {
-    const x = setInterval(() => setCount((curr) => curr + 1), 1000);
-
-    return () => {
-      clearInterval(x);
-    };
-  }, []);
-
-  // console.log("THE SELECTED KEY", key);
-  // console.log("THE ACTUAL OBJECT", selectedObject);
-  console.log("The current count is", count);
-
   return (
     <Select
       selectedKey={key}
