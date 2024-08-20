@@ -69,7 +69,9 @@ export function SelectItem(props: ListBoxItemProps) {
 }
 
 export function SelectHeader(props: ComponentProps<typeof Header>) {
-  return <Header className="py-1 px-4 font-bold">{props.children}</Header>;
+  return (
+    <Header className="py-1 px-4 text-lg font-bold">{props.children}</Header>
+  );
 }
 
 export function SelectSection(props: ComponentProps<typeof Section>) {
