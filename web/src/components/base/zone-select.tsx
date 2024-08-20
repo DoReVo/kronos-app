@@ -17,6 +17,7 @@ import {
   FieldError,
   Text,
 } from "react-aria-components";
+import { isJSDocPropertyLikeTag } from "typescript";
 
 interface MySelectProps<T extends object>
   extends Omit<SelectProps<T>, "children"> {
@@ -41,7 +42,11 @@ export function Select<T extends object>({
     <RASelect {...props} className="">
       <Label>{label}</Label>
       <Button className="bg-purple-500 text-white px-4 py-2 rounded w-70 text-center">
-        <SelectValue />
+        <SelectValue>
+          {({ isPlaceholder, selectedText }) => {
+            return isPlaceholder ? "Choose Location" : selectedText;
+          }}
+        </SelectValue>
       </Button>
       {description && <Text slot="description">{description}</Text>}
       <FieldError>{errorMessage}</FieldError>

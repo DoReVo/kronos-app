@@ -9,7 +9,7 @@ import {
   SelectSection,
 } from "../components/base/zone-select";
 import { ZONE_OPTIONS } from "@kronos/common";
-import { Collection } from "react-aria-components";
+import { Collection, Text } from "react-aria-components";
 import type { Key } from "react-aria-components";
 import { useEffect, useMemo, useState } from "react";
 
@@ -80,8 +80,8 @@ function ZoneSelect() {
     };
   }, []);
 
-  console.log("THE SELECTED KEY", key);
-  console.log("THE ACTUAL OBJECT", selectedObject);
+  // console.log("THE SELECTED KEY", key);
+  // console.log("THE ACTUAL OBJECT", selectedObject);
   console.log("The current count is", count);
 
   return (
@@ -105,7 +105,11 @@ function ZoneSelect() {
               <SelectHeader>{header}</SelectHeader>
               <Collection items={itemList}>
                 {(item) => {
-                  return <SelectItem>{item.zone}</SelectItem>;
+                  return (
+                    <SelectItem textValue={header}>
+                      <Text slot="label">{item.zone}</Text>
+                    </SelectItem>
+                  );
                 }}
               </Collection>
             </SelectSection>
