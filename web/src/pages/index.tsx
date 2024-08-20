@@ -11,7 +11,7 @@ import {
 import { ZONE_OPTIONS } from "@kronos/common";
 import { Collection } from "react-aria-components";
 import type { Key } from "react-aria-components";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const createKy = () => {
   return ky.create({
@@ -52,17 +52,37 @@ function ZoneSelect() {
     },
   });
 
-  const listOfItems = Object.entries(data ?? {})
-    ?.map(([_, entries]) => {
-      return Object.entries(entries)?.map(([code, zone]) => {
-        return { id: `${code}-${zone}`, data: code };
-      });
-    })
-    .flat();
+  const listOfItems: selectedZoneInfo[] = useMemo(() => {
+    console.log("Re-computing listOfItems");
+    return Object.entries(data ?? {})
+      ?.map(([header, entries]) => {
+        return Object.entries(entries)?.map(([code, zone]) => {
+          return { id: `${code}-${zone}`, code, zone, state: header };
+        });
+      })
+      .flat();
+  }, [data]);
 
   const [key, sKey] = useState<Key>("");
 
-  console.log("DA SELECTED KEY IS", key);
+  const selectedObject: selectedZoneInfo | undefined = useMemo(() => {
+    console.log("Re-computing selected Item");
+    return listOfItems?.find((i) => i.id === key);
+  }, [key]);
+
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    const x = setInterval(() => setCount((curr) => curr + 1), 1000);
+
+    return () => {
+      clearInterval(x);
+    };
+  }, []);
+
+  console.log("THE SELECTED KEY", key);
+  console.log("THE ACTUAL OBJECT", selectedObject);
+  console.log("The current count is", count);
 
   return (
     <Select
@@ -74,7 +94,7 @@ function ZoneSelect() {
         Object.entries(data)?.map(([header, entries]) => {
           const itemList: selectedZoneInfo[] = Object.entries(entries)?.map(
             ([code, zone]) => ({
-              id: `${code} - ${zone}`,
+              id: `${code}-${zone}`,
               code,
               zone,
               state: header,
