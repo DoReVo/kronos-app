@@ -2,27 +2,24 @@ import { useQuery } from "@tanstack/react-query";
 import { TimeCard } from "../components/time-card";
 import ky from "ky";
 import QueryClientProvider from "../query/query-provider";
-import { MyItem, MySelect } from "../components/base/select";
+import {
+  SelectItem,
+  Select,
+  SelectHeader,
+  SelectSection,
+} from "../components/base/select";
+import { ZONE_OPTIONS } from "@kronos/common";
 
-const useKy = () => {
+const createKy = () => {
   return ky.create({
-    prefixUrl: import.meta.env.VITE_APP_API_URL,
+    prefixUrl: import.meta.env.PUBLIC_API_URL,
   });
 };
 
 export function PrayerTimePage() {
-  const items = [
-    {
-      id: "1",
-      label: "TWO STEP",
-    },
-  ];
   return (
     <QueryClientProvider>
-      <MySelect items={items} onSelectionChange={console.log}>
-        <MyItem>One</MyItem>
-        <MyItem>Two</MyItem>
-      </MySelect>
+      <ZoneSelect />
       <TimeCard Name="imsak" Time="09:00" />
       <TimeCard Name="subuh" Time="09:00" />
       <TimeCard Name="syuruk" Time="09:00" />
@@ -31,5 +28,38 @@ export function PrayerTimePage() {
       <TimeCard Name="maghrib" Time="09:00" />
       <TimeCard Name="isyak" Time="09:00" />
     </QueryClientProvider>
+  );
+}
+
+function ZoneSelect() {
+  const ky = createKy();
+  const country = "malaysia";
+
+  const { data } = useQuery({
+    queryKey: [country, "zone"],
+    queryFn: async () => {
+      const rez = await ky.get("selectionoptions").json<typeof ZONE_OPTIONS>();
+      return rez;
+    },
+  });
+
+  return (
+    <Select>
+      {data!! &&
+        Object.entries(data)?.map(([header, entries]) => {
+          return (
+            <SelectSection key={header}>
+              <SelectHeader>{header}</SelectHeader>
+              {Object.entries(entries)?.map(([code, zone]) => {
+                return (
+                  <SelectItem key={`${code}-${zone}`}>
+                    {code} - {zone}
+                  </SelectItem>
+                );
+              })}
+            </SelectSection>
+          );
+        })}
+    </Select>
   );
 }
