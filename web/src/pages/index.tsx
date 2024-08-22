@@ -88,7 +88,6 @@ function ZoneSelect() {
   });
 
   const listOfItems: SelectedZoneInfo[] = useMemo(() => {
-    console.log("Re-computing listOfItems");
     return Object.entries(data ?? {})
       ?.map(([header, entries]) => {
         return Object.entries(entries)?.map(([code, zone]) => {
@@ -103,7 +102,6 @@ function ZoneSelect() {
   const setZone = useSetAtom(selectedTime);
 
   useMemo(() => {
-    console.log("Re-computing selected Item");
     const daZone = listOfItems?.find((i) => i.id === key);
     setZone(daZone);
     return daZone;
