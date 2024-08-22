@@ -3,6 +3,17 @@ export interface PrayerTime {
   Time: string;
 }
 
+export interface PrayerTimeItem {
+  date: string;
+  imsak: string;
+  syuruk: string;
+  maghrib: string;
+  subuh: string;
+  zohor: string;
+  asar: string;
+  isyak: string;
+}
+
 export const ZONE_OPTIONS = {
   Johor: {
     JHR01: "Pulau Aur dan Pulau Pemanggil ",

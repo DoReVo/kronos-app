@@ -17,7 +17,6 @@ import {
   FieldError,
   Text,
 } from "react-aria-components";
-import { isJSDocPropertyLikeTag } from "typescript";
 
 interface MySelectProps<T extends object>
   extends Omit<SelectProps<T>, "children"> {

@@ -1,6 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { TimeCard } from "../components/time-card";
-import ky from "ky";
+import kyFactory from "ky";
 import QueryClientProvider from "../query/query-provider";
 import {
   SelectItem,
@@ -9,32 +9,68 @@ import {
   SelectSection,
 } from "../components/base/zone-select";
 import { ZONE_OPTIONS } from "@kronos/common";
+import type { PrayerTimeItem } from "@kronos/common";
 import { Collection, Text } from "react-aria-components";
 import type { Key } from "react-aria-components";
-import { useEffect, useMemo, useState } from "react";
+import { useDeferredValue, useMemo, useState } from "react";
+import { atom, useAtomValue, useSetAtom } from "jotai";
+import { DateTime } from "luxon";
 
 const createKy = () => {
-  return ky.create({
+  return kyFactory.create({
     prefixUrl: import.meta.env.PUBLIC_API_URL,
   });
 };
 
+const ky = createKy();
+const selectedTime = atom<SelectedZoneInfo>();
+
+function PageContent() {
+  const selected = useAtomValue(selectedTime);
+
+  const today = DateTime.now().toISODate();
+
+  const { data } = useQuery({
+    queryKey: ["time", selected],
+    queryFn: async () => {
+      if (!selected || !today) return null;
+
+      return await ky
+        .get("time", {
+          searchParams: {
+            zone: selected?.code,
+            date: today,
+          },
+        })
+        .json<PrayerTimeItem>();
+    },
+    enabled: !!selected,
+    placeholderData: keepPreviousData,
+  });
+
+  return (
+    <>
+      <ZoneSelect />
+      <TimeCard Name="imsak" Time={data?.imsak ?? ""} />
+      <TimeCard Name="subuh" Time={data?.subuh ?? ""} />
+      <TimeCard Name="syuruk" Time={data?.syuruk ?? ""} />
+      <TimeCard Name="zohor" Time={data?.zohor ?? ""} />
+      <TimeCard Name="asar" Time={data?.asar ?? ""} />
+      <TimeCard Name="maghrib" Time={data?.maghrib ?? ""} />
+      <TimeCard Name="isyak" Time={data?.isyak ?? ""} />
+    </>
+  );
+}
+
 export function PrayerTimePage() {
   return (
     <QueryClientProvider>
-      <ZoneSelect />
-      <TimeCard Name="imsak" Time="09:00" />
-      <TimeCard Name="subuh" Time="09:00" />
-      <TimeCard Name="syuruk" Time="09:00" />
-      <TimeCard Name="zohor" Time="09:00" />
-      <TimeCard Name="asar" Time="09:00" />
-      <TimeCard Name="maghrib" Time="09:00" />
-      <TimeCard Name="isyak" Time="09:00" />
+      <PageContent />
     </QueryClientProvider>
   );
 }
 
-interface selectedZoneInfo {
+interface SelectedZoneInfo {
   id: string;
   code: string;
   zone: string;
@@ -42,7 +78,6 @@ interface selectedZoneInfo {
 }
 
 function ZoneSelect() {
-  const ky = createKy();
   const country = "malaysia";
 
   const { data } = useQuery({
@@ -52,7 +87,7 @@ function ZoneSelect() {
     },
   });
 
-  const listOfItems: selectedZoneInfo[] = useMemo(() => {
+  const listOfItems: SelectedZoneInfo[] = useMemo(() => {
     console.log("Re-computing listOfItems");
     return Object.entries(data ?? {})
       ?.map(([header, entries]) => {
@@ -65,9 +100,13 @@ function ZoneSelect() {
 
   const [key, sKey] = useState<Key>("");
 
-  const selectedObject: selectedZoneInfo | undefined = useMemo(() => {
+  const setZone = useSetAtom(selectedTime);
+
+  useMemo(() => {
     console.log("Re-computing selected Item");
-    return listOfItems?.find((i) => i.id === key);
+    const daZone = listOfItems?.find((i) => i.id === key);
+    setZone(daZone);
+    return daZone;
   }, [key]);
 
   return (
@@ -78,7 +117,7 @@ function ZoneSelect() {
     >
       {data!! &&
         Object.entries(data)?.map(([header, entries]) => {
-          const itemList: selectedZoneInfo[] = Object.entries(entries)?.map(
+          const itemList: SelectedZoneInfo[] = Object.entries(entries)?.map(
             ([code, zone]) => ({
               id: `${code}-${zone}`,
               code,
