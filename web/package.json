@@ -10,27 +10,27 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/check": "^0.7.0",
-    "@astrojs/react": "^3.6.0",
+    "@astrojs/check": "^0.9.4",
+    "@astrojs/react": "^4.1.2",
     "@kronos/common": "^1.0.0",
-    "@tanstack/react-query": "^5.49.2",
-    "@types/react": "^18.3.3",
-    "@types/react-dom": "^18.3.0",
-    "astro": "^4.11.3",
-    "jotai": "^2.9.3",
-    "ky": "^1.4.0",
+    "@tanstack/react-query": "^5.62.8",
+    "@types/react": "^19.0.2",
+    "@types/react-dom": "^19.0.2",
+    "astro": "^5.1.1",
+    "jotai": "^2.10.4",
+    "ky": "^1.7.4",
     "luxon": "^3.5.0",
-    "react": "^18.3.1",
-    "react-aria": "^3.33.1",
-    "react-aria-components": "^1.2.1",
-    "react-dom": "^18.3.1",
-    "typescript": "^5.5.2"
+    "react": "^19.0.0",
+    "react-aria": "^3.36.0",
+    "react-aria-components": "^1.5.0",
+    "react-dom": "^19.0.0",
+    "typescript": "^5.7.2"
   },
   "devDependencies": {
-    "@unocss/reset": "^0.61.0",
+    "@unocss/reset": "^0.65.2",
     "clsx": "^2.1.1",
-    "prettier": "^3.3.2",
-    "prettier-plugin-astro": "^0.14.0",
-    "unocss": "^0.61.0"
+    "prettier": "^3.4.2",
+    "prettier-plugin-astro": "^0.14.1",
+    "unocss": "^0.65.2"
   }
 }
