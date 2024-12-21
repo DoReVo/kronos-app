@@ -7,7 +7,7 @@ import { PrayerTimePage } from "./index.tsx";
 <BaseSiteLayout title="Waktu Solat" description="Waktu Solat Application">
   <MainContentLayout>
     <div class="mt-12 flex flex-col items-center justify-start gap-y-3 px-2">
-      <PrayerTimePage client:load />
+      <PrayerTimePage client:only="react" />
     </div>
   </MainContentLayout>
 </BaseSiteLayout>
