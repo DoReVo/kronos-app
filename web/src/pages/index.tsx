@@ -55,30 +55,6 @@ function PageContent() {
 
   return (
     <>
-      <ComboBox withButton={false} menuTrigger="focus" label="Favorite Animal">
-        <ComboBoxSection key="ANIMALS" title="ANIMALS">
-          <ComboBoxItem textValue="red panda" key="red panda">
-            Red Panda
-          </ComboBoxItem>
-          <ComboBoxItem textValue="cat" key="cat">
-            Cat
-          </ComboBoxItem>
-        </ComboBoxSection>
-        <ComboBoxSection title="FAT">
-          <ComboBoxItem textValue="dog" key="dog">
-            Dog
-          </ComboBoxItem>
-          <ComboBoxItem textValue="aardvark" key="aardvark">
-            Aardvark
-          </ComboBoxItem>
-        </ComboBoxSection>
-        <ComboBoxItem textValue="kangaroo" key="kangaroo">
-          Kangaroo
-        </ComboBoxItem>
-        <ComboBoxItem textValue="snake" key="snake">
-          Snake
-        </ComboBoxItem>
-      </ComboBox>
       <ZoneSelect />
       <TimeCard Name="imsak" Time={data?.imsak ?? ""} />
       <TimeCard Name="subuh" Time={data?.subuh ?? ""} />

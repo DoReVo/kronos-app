@@ -1,4 +1,4 @@
-import * as React from "react";
+import { memo, useRef, type PropsWithChildren } from "react";
 import type { AriaListBoxOptions } from "@react-aria/listbox";
 import type { ListState } from "react-stately";
 import type { Node } from "@react-types/shared";
@@ -24,7 +24,7 @@ interface OptionProps {
 const ListboxStyle = cs(["w-full", "max-h-72", "overflow-auto"]);
 
 export function ListBox(props: ListBoxProps) {
-  let ref = React.useRef<HTMLUListElement>(null);
+  let ref = useRef<HTMLUListElement>(null);
 
   const propsWithDefaults: WithRequired<ListBoxProps, "listBoxRef"> = {
     ...props,
@@ -51,7 +51,6 @@ export function ListBox(props: ListBoxProps) {
 function ListBoxSection({ section, state }: SectionProps) {
   let { itemProps, headingProps, groupProps } = useListBoxSection({
     heading: section.rendered,
-    "aria-label": section["aria-label"],
   });
 
   return (
@@ -75,9 +74,9 @@ function ListBoxSection({ section, state }: SectionProps) {
   );
 }
 
-function Option({ item, state }: OptionProps) {
-  let ref = React.useRef<HTMLLIElement>(null);
-  let { optionProps, isDisabled, isSelected, isFocused } = useOption(
+const Option = memo(function Option({ item, state }: OptionProps) {
+  let ref = useRef<HTMLLIElement>(null);
+  let { optionProps } = useOption(
     {
       key: item.key,
     },
@@ -85,23 +84,9 @@ function Option({ item, state }: OptionProps) {
     ref,
   );
 
-  let text = "text-gray-700";
-  if (isFocused || isSelected) {
-    text = "text-pink-600";
-  } else if (isDisabled) {
-    text = "text-gray-200";
-  }
-
   return (
-    <li
-      {...optionProps}
-      ref={ref}
-      className={`m-1 rounded-md py-2 px-2 text-sm outline-none cursor-default flex items-center justify-between ${text} ${
-        isFocused ? "bg-pink-100" : ""
-      } ${isSelected ? "font-bold" : ""}`}
-    >
-      {item.rendered}
-      {isSelected && <span>CX</span>}
+    <li {...optionProps} ref={ref} className="">
+      {item.textValue}
     </li>
   );
-}
+});

@@ -3,7 +3,7 @@ import { useComboBoxState } from "react-stately";
 import { useComboBox, useFilter, useButton } from "react-aria";
 import { ListBox } from "../listbox/listbox.tsx";
 import { Popover } from "../popover/popover.tsx";
-import { useCallback, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useRef, useState } from "react";
 import cs from "clsx";
 import { useResizeObserver } from "../../utils/use-resize-observer.ts";
 
@@ -79,12 +79,12 @@ export function ComboBox<T extends object>(props: Props<T>) {
         <input {...inputProps} ref={inputRef} className={InputStyle} />
         {withButton && (
           <button {...buttonProps} ref={buttonRef} className={ButtonStyle}>
-            <span>D</span>
+            <span>DXXX</span>
           </button>
         )}
       </div>
 
-      {true && (
+      {state.isOpen && (
         <Popover
           popoverRef={popoverRef}
           triggerRef={triggerRef}
