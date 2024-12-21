@@ -97,18 +97,16 @@ export function ComboBox<T extends object>(props: Props<T>) {
         )}
       </div>
 
-      {state.isOpen && (
-        <Popover
-          popoverRef={popoverRef}
-          triggerRef={triggerRef}
-          state={state}
-          isNonModal
-          placement="bottom start"
-          menuWidth={menuWidth}
-        >
-          <ListBox {...listBoxProps} listBoxRef={listBoxRef} state={state} />
-        </Popover>
-      )}
+      <Popover
+        popoverRef={popoverRef}
+        triggerRef={triggerRef}
+        state={state}
+        isNonModal
+        placement="bottom start"
+        menuWidth={menuWidth}
+      >
+        <ListBox {...listBoxProps} listBoxRef={listBoxRef} state={state} />
+      </Popover>
     </div>
   );
 }

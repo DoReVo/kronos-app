@@ -57,7 +57,10 @@ export function Popover(props: PopoverProps) {
 
   return (
     <Overlay>
-      <div style={{ "--trigger-width": width } as CSSProperties}>
+      <div
+        style={{ "--trigger-width": width } as CSSProperties}
+        className={cs({ hidden: !state.isOpen })}
+      >
         {!isNonModal && <div {...underlayProps} className={UnderlayStyle} />}
         <div {...popoverProps} ref={popoverRef} className={PopoverStyle}>
           {!isNonModal && <DismissButton onDismiss={state.close} />}
