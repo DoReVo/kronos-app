@@ -2,12 +2,6 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { TimeCard } from "../components/time-card";
 import kyFactory from "ky";
 import QueryClientProvider from "../query/query-provider";
-import {
-  SelectItem,
-  Select,
-  SelectHeader,
-  SelectSection,
-} from "../components/base/zone-select";
 import { ZONE_OPTIONS } from "@kronos/common";
 import type { PrayerTimeItem } from "@kronos/common";
 import { Collection, Text } from "react-aria-components";
@@ -15,11 +9,8 @@ import type { Key } from "react-aria-components";
 import { useMemo, useState } from "react";
 import { atom, useAtomValue, useSetAtom } from "jotai";
 import { DateTime } from "luxon";
-import {
-  ComboBox,
-  ComboBoxItem,
-  ComboBoxSection,
-} from "../components/base/combobox/combobox";
+import { ComboBox } from "../components/base/combobox/combobox";
+import { Item, Section } from "react-stately";
 
 const createKy = () => {
   return kyFactory.create({
@@ -55,7 +46,9 @@ function PageContent() {
 
   return (
     <>
-      <ZoneSelect />
+      <div>
+        <ZoneSelect />
+      </div>
       <TimeCard Name="imsak" Time={data?.imsak ?? ""} />
       <TimeCard Name="subuh" Time={data?.subuh ?? ""} />
       <TimeCard Name="syuruk" Time={data?.syuruk ?? ""} />
@@ -113,10 +106,11 @@ function ZoneSelect() {
   }, [key]);
 
   return (
-    <Select
+    <ComboBox
+      menuTrigger="focus"
       selectedKey={key}
       onSelectionChange={(k) => sKey(k)}
-      items={listOfItems}
+      placeholder="Choose a zone"
     >
       {data!! &&
         Object.entries(data)?.map(([header, entries]) => {
@@ -129,20 +123,15 @@ function ZoneSelect() {
             }),
           );
           return (
-            <SelectSection key={header}>
-              <SelectHeader>{header}</SelectHeader>
-              <Collection items={itemList}>
-                {(item) => {
-                  return (
-                    <SelectItem textValue={header}>
-                      <Text slot="label">{item.zone}</Text>
-                    </SelectItem>
-                  );
-                }}
-              </Collection>
-            </SelectSection>
+            <Section title={header}>
+              {itemList.map((item) => (
+                <Item key={item.code} textValue={item.zone}>
+                  {item.zone}
+                </Item>
+              ))}
+            </Section>
           );
         })}
-    </Select>
+    </ComboBox>
   );
 }

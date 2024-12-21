@@ -14,7 +14,20 @@ export {
 
 const RootStyle = cs("flex-col", "w-full", "relative");
 const InputContainerStyle = cs("");
-const InputStyle = cs("");
+const InputStyle = cs([
+  "uno-layer-base:bg-purple-500",
+  "uno-layer-base:text-white",
+  "uno-layer-base:px-4",
+  "uno-layer-base:py-2",
+  "uno-layer-base:rounded",
+  "uno-layer-base:w-70",
+  "uno-layer-base:text-center",
+  "uno-layer-base:data-[focus-visible=true]:outline",
+  "uno-layer-base:data-[focus-visible=true]:outline-3",
+  "uno-layer-base:data-[focus-visible=true]:outline-purple",
+  "uno-layer-base:data-[focus-visible=true]:outline-offset-2",
+  "uno-layer-base:placeholder:text-white",
+]);
 const ButtonStyle = cs("");
 
 export interface Props<T extends object> extends ComboBoxProps<T> {

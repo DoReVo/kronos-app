@@ -1,8 +1,14 @@
-import { memo, useRef, type PropsWithChildren } from "react";
+import { useRef } from "react";
 import type { AriaListBoxOptions } from "@react-aria/listbox";
 import type { ListState } from "react-stately";
 import type { Node } from "@react-types/shared";
-import { useListBox, useListBoxSection, useOption } from "react-aria";
+import {
+  mergeProps,
+  useHover,
+  useListBox,
+  useListBoxSection,
+  useOption,
+} from "react-aria";
 import type { WithRequired } from "@tanstack/react-query";
 import cs from "clsx";
 
@@ -21,7 +27,13 @@ interface OptionProps {
   state: ListState<unknown>;
 }
 
-const ListboxStyle = cs(["w-full", "max-h-72", "overflow-auto"]);
+const ListboxStyle = cs([
+  "w-full",
+  "max-h-xs",
+  "overflow-auto",
+  "bg-slate-100",
+  "text-purple",
+]);
 
 export function ListBox(props: ListBoxProps) {
   let ref = useRef<HTMLUListElement>(null);
@@ -57,10 +69,7 @@ function ListBoxSection({ section, state }: SectionProps) {
     <>
       <li {...itemProps} className="pt-2">
         {section.rendered && (
-          <span
-            {...headingProps}
-            className="text-xs font-bold uppercase text-gray-500 mx-3"
-          >
+          <span {...headingProps} className="py-1 px-4 text-lg font-bold">
             {section.rendered}
           </span>
         )}
@@ -74,9 +83,29 @@ function ListBoxSection({ section, state }: SectionProps) {
   );
 }
 
-const Option = memo(function Option({ item, state }: OptionProps) {
+const OptionStyle = cs([
+  "py-1 px-4",
+  "data-[hovered=true]:bg-purple",
+  "data-[hovered=true]:text-white",
+  "data-[selected=true]:bg-purple-600",
+  "data-[selected=true]:text-white",
+  "data-[focus-visible=true]:bg-purple",
+  "data-[focus-visible=true]:text-white",
+  "data-[focus-visible=true]:outline",
+  "data-[focus-visible=true]:outline-3",
+  "data-[focus-visible=true]:outline-purple",
+  "data-[focus-visible=true]:outline-offset-2",
+]);
+
+const Option = function Option({ item, state }: OptionProps) {
   let ref = useRef<HTMLLIElement>(null);
-  let { optionProps } = useOption(
+  let {
+    optionProps,
+    isSelected,
+    isFocusVisible,
+    isFocused,
+    isDisabled: isOptionDisabled,
+  } = useOption(
     {
       key: item.key,
     },
@@ -84,9 +113,19 @@ const Option = memo(function Option({ item, state }: OptionProps) {
     ref,
   );
 
+  const { hoverProps, isHovered } = useHover({ isDisabled: isOptionDisabled });
+
   return (
-    <li {...optionProps} ref={ref} className="">
+    <li
+      {...mergeProps(hoverProps, optionProps)}
+      ref={ref}
+      className={OptionStyle}
+      data-selected={isSelected}
+      data-focus-visible={isFocusVisible}
+      data-focused={isFocused}
+      data-hovered={isHovered}
+    >
       {item.textValue}
     </li>
   );
-});
+};

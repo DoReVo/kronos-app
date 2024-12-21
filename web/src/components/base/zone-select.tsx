@@ -40,7 +40,7 @@ export function Select<T extends object>({
   return (
     <RASelect {...props} className="">
       <Label>{label}</Label>
-      <Button className="bg-purple-500 text-white px-4 py-2 rounded w-70 text-center data-[focus-visible=true]:outline data-[focus-visible=true]:outline-3 data-[focus-visible=true]:outline-purple data-[focus-visible=true]:outline-offset-2">
+      <Button className="">
         <SelectValue>
           {({ isPlaceholder, selectedText }) => {
             return isPlaceholder ? "Choose Location" : selectedText;
@@ -50,21 +50,14 @@ export function Select<T extends object>({
       {description && <Text slot="description">{description}</Text>}
       <FieldError>{errorMessage}</FieldError>
       <Popover className="">
-        <ListBox className="max-h-xs overflow-auto bg-slate-100 text-purple rounded w-[--trigger-width] data-[focus-visible=true]:outline data-[focus-visible=true]:outline-3 data-[focus-visible=true]:outline-purple data-[focus-visible=true]:outline-offset-2">
-          {children}
-        </ListBox>
+        <ListBox className="">{children}</ListBox>
       </Popover>
     </RASelect>
   );
 }
 
 export function SelectItem(props: ListBoxItemProps) {
-  return (
-    <ListBoxItem
-      {...props}
-      className="outline-none py-1 px-4 data-[hovered=true]:bg-purple data-[hovered=true]:text-white data-[selected=true]:bg-purple-600 data-[selected=true]:text-white data-[focus-visible]:bg-purple data-[focus-visible]:text-white"
-    />
-  );
+  return <ListBoxItem {...props} className="outline-none py-1 px-4 " />;
 }
 
 export function SelectHeader(props: ComponentProps<typeof Header>) {
