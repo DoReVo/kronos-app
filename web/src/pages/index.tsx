@@ -12,10 +12,14 @@ import { ZONE_OPTIONS } from "@kronos/common";
 import type { PrayerTimeItem } from "@kronos/common";
 import { Collection, Text } from "react-aria-components";
 import type { Key } from "react-aria-components";
-import { useDeferredValue, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { atom, useAtomValue, useSetAtom } from "jotai";
 import { DateTime } from "luxon";
-import { ComboBox, Item } from "../components/base/combobox/combobox";
+import {
+  ComboBox,
+  ComboBoxItem,
+  ComboBoxSection,
+} from "../components/base/combobox/combobox";
 
 const createKy = () => {
   return kyFactory.create({
@@ -52,12 +56,28 @@ function PageContent() {
   return (
     <>
       <ComboBox withButton={false} menuTrigger="focus" label="Favorite Animal">
-        <Item key="red panda">Red Panda</Item>
-        <Item key="cat">Cat</Item>
-        <Item key="dog">Dog</Item>
-        <Item key="aardvark">Aardvark</Item>
-        <Item key="kangaroo">Kangaroo</Item>
-        <Item key="snake">Snake</Item>
+        <ComboBoxSection key="ANIMALS" title="ANIMALS">
+          <ComboBoxItem textValue="red panda" key="red panda">
+            Red Panda
+          </ComboBoxItem>
+          <ComboBoxItem textValue="cat" key="cat">
+            Cat
+          </ComboBoxItem>
+        </ComboBoxSection>
+        <ComboBoxSection title="FAT">
+          <ComboBoxItem textValue="dog" key="dog">
+            Dog
+          </ComboBoxItem>
+          <ComboBoxItem textValue="aardvark" key="aardvark">
+            Aardvark
+          </ComboBoxItem>
+        </ComboBoxSection>
+        <ComboBoxItem textValue="kangaroo" key="kangaroo">
+          Kangaroo
+        </ComboBoxItem>
+        <ComboBoxItem textValue="snake" key="snake">
+          Snake
+        </ComboBoxItem>
       </ComboBox>
       <ZoneSelect />
       <TimeCard Name="imsak" Time={data?.imsak ?? ""} />

@@ -3,13 +3,19 @@ import { useComboBoxState } from "react-stately";
 import { useComboBox, useFilter, useButton } from "react-aria";
 import { ListBox } from "../listbox/listbox.tsx";
 import { Popover } from "../popover/popover.tsx";
-import { useRef } from "react";
-import { clsx } from "clsx";
+import { useCallback, useRef, useState, type CSSProperties } from "react";
+import cs from "clsx";
+import { useResizeObserver } from "../../utils/use-resize-observer.ts";
 
-export { Item, Section } from "react-stately";
+export {
+  Item as ComboBoxItem,
+  Section as ComboBoxSection,
+} from "react-stately";
 
-const RootStyle = clsx("flex-col", "w-full", "relative");
-const InputContainerStyle = clsx("");
+const RootStyle = cs("flex-col", "w-full", "relative");
+const InputContainerStyle = cs("");
+const InputStyle = cs("");
+const ButtonStyle = cs("");
 
 export interface Props<T extends object> extends ComboBoxProps<T> {
   withButton?: boolean;
@@ -23,10 +29,32 @@ export function ComboBox<T extends object>(props: Props<T>) {
   let { contains } = useFilter({ sensitivity: "base" });
   let state = useComboBoxState({ ...props, defaultFilter: contains });
 
-  let buttonRef = useRef(null);
-  let inputRef = useRef(null);
+  let buttonRef = useRef<HTMLButtonElement>(null);
+  let inputRef = useRef<HTMLInputElement>(null);
   let listBoxRef = useRef(null);
   let popoverRef = useRef(null);
+  let triggerRef = useRef(null);
+
+  let [menuWidth, setMenuWidth] = useState<string | null>(null);
+
+  let onResize = useCallback(() => {
+    if (inputRef.current) {
+      let buttonRect = buttonRef.current?.getBoundingClientRect();
+      let inputRect = inputRef.current.getBoundingClientRect();
+      let minX = buttonRect
+        ? Math.min(buttonRect.left, inputRect.left)
+        : inputRect.left;
+      let maxX = buttonRect
+        ? Math.max(buttonRect.right, inputRect.right)
+        : inputRect.right;
+      setMenuWidth(maxX - minX + "px");
+    }
+  }, [buttonRef, inputRef, setMenuWidth]);
+
+  useResizeObserver({
+    ref: inputRef,
+    onResize: onResize,
+  });
 
   let {
     buttonProps: triggerProps,
@@ -47,34 +75,23 @@ export function ComboBox<T extends object>(props: Props<T>) {
 
   return (
     <div className={RootStyle}>
-      <div className={InputContainerStyle}>
-        <input
-          {...inputProps}
-          ref={inputRef}
-          className="outline-none px-3 py-1 w-full"
-        />
+      <div className={InputContainerStyle} ref={triggerRef}>
+        <input {...inputProps} ref={inputRef} className={InputStyle} />
         {withButton && (
-          <button
-            {...buttonProps}
-            ref={buttonRef}
-            className={`px-1 bg-gray-100 cursor-default border-l-2 ${
-              state.isFocused
-                ? "border-pink-500 text-pink-600"
-                : "border-gray-300 text-gray-500"
-            }`}
-          >
+          <button {...buttonProps} ref={buttonRef} className={ButtonStyle}>
             <span>D</span>
           </button>
         )}
       </div>
-      {state.isOpen && (
+
+      {true && (
         <Popover
           popoverRef={popoverRef}
-          triggerRef={inputRef}
+          triggerRef={triggerRef}
           state={state}
           isNonModal
           placement="bottom start"
-          className="w-52"
+          menuWidth={menuWidth}
         >
           <ListBox {...listBoxProps} listBoxRef={listBoxRef} state={state} />
         </Popover>

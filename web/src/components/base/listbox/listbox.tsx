@@ -3,9 +3,11 @@ import type { AriaListBoxOptions } from "@react-aria/listbox";
 import type { ListState } from "react-stately";
 import type { Node } from "@react-types/shared";
 import { useListBox, useListBoxSection, useOption } from "react-aria";
+import type { WithRequired } from "@tanstack/react-query";
+import cs from "clsx";
 
 interface ListBoxProps extends AriaListBoxOptions<unknown> {
-  listBoxRef?: React.RefObject<HTMLUListElement>;
+  listBoxRef?: React.RefObject<HTMLUListElement | null>;
   state: ListState<unknown>;
 }
 
@@ -19,17 +21,22 @@ interface OptionProps {
   state: ListState<unknown>;
 }
 
+const ListboxStyle = cs(["w-full", "max-h-72", "overflow-auto"]);
+
 export function ListBox(props: ListBoxProps) {
   let ref = React.useRef<HTMLUListElement>(null);
-  let { listBoxRef = ref, state } = props;
+
+  const propsWithDefaults: WithRequired<ListBoxProps, "listBoxRef"> = {
+    ...props,
+    listBoxRef: props.listBoxRef ?? ref,
+  };
+
+  const { state, listBoxRef } = propsWithDefaults;
+
   let { listBoxProps } = useListBox(props, state, listBoxRef);
 
   return (
-    <ul
-      {...listBoxProps}
-      ref={listBoxRef}
-      className="w-full max-h-72 overflow-auto outline-none"
-    >
+    <ul {...listBoxProps} ref={listBoxRef} className={ListboxStyle}>
       {[...state.collection].map((item) =>
         item.type === "section" ? (
           <ListBoxSection key={item.key} section={item} state={state} />
