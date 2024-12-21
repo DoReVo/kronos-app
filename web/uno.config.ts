@@ -23,4 +23,8 @@ export default defineConfig({
   theme: {
     colors: {},
   },
+  layers: {
+    base: -1,
+    default: 0,
+  },
 });

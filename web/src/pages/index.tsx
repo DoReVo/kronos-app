@@ -15,6 +15,7 @@ import type { Key } from "react-aria-components";
 import { useDeferredValue, useMemo, useState } from "react";
 import { atom, useAtomValue, useSetAtom } from "jotai";
 import { DateTime } from "luxon";
+import { ComboBox, Item } from "../components/base/combobox/combobox";
 
 const createKy = () => {
   return kyFactory.create({
@@ -50,6 +51,14 @@ function PageContent() {
 
   return (
     <>
+      <ComboBox withButton={false} menuTrigger="focus" label="Favorite Animal">
+        <Item key="red panda">Red Panda</Item>
+        <Item key="cat">Cat</Item>
+        <Item key="dog">Dog</Item>
+        <Item key="aardvark">Aardvark</Item>
+        <Item key="kangaroo">Kangaroo</Item>
+        <Item key="snake">Snake</Item>
+      </ComboBox>
       <ZoneSelect />
       <TimeCard Name="imsak" Time={data?.imsak ?? ""} />
       <TimeCard Name="subuh" Time={data?.subuh ?? ""} />
