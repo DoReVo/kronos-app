@@ -1,18 +1,37 @@
-import type { OverlayTriggerState } from "react-stately";
 import type { AriaPopoverProps } from "@react-aria/overlays";
-import * as React from "react";
-import { usePopover, DismissButton, Overlay } from "@react-aria/overlays";
+import { DismissButton, Overlay, usePopover } from "@react-aria/overlays";
+import { useRef, type ReactNode, type RefObject } from "react";
+import type { OverlayTriggerState } from "react-stately";
+import type { WithDefaultProps } from "../../../utils";
+import cs from "clsx";
 
 interface PopoverProps extends Omit<AriaPopoverProps, "popoverRef"> {
-  children: React.ReactNode;
+  children: ReactNode;
   state: OverlayTriggerState;
   className?: string;
-  popoverRef?: React.RefObject<HTMLDivElement>;
+  popoverRef?: RefObject<HTMLDivElement | null>;
 }
 
+const UnderlayStyle = cs("fixed", "inset-0");
+const PopoverStyle = cs([
+  "uno-layer-base:z-100",
+  "uno-layer-base:shadow-lg",
+  "uno-layer-base:border",
+  "uno-layer-base:border-gray-300",
+  "uno-layer-base:bg-white",
+  "uno-layer-base:rounded-md",
+  "uno-layer-base:mt-2",
+]);
+
 export function Popover(props: PopoverProps) {
-  let ref = React.useRef<HTMLDivElement>(null);
-  let { popoverRef = ref, state, children, className, isNonModal } = props;
+  let ref = useRef<HTMLDivElement>(null);
+
+  const propsWithDefaults: WithDefaultProps<PopoverProps, "popoverRef"> = {
+    ...props,
+    popoverRef: props.popoverRef ?? ref,
+  };
+
+  let { popoverRef, state, children, isNonModal } = propsWithDefaults;
 
   let { popoverProps, underlayProps } = usePopover(
     {
@@ -24,12 +43,8 @@ export function Popover(props: PopoverProps) {
 
   return (
     <Overlay>
-      {!isNonModal && <div {...underlayProps} className="fixed inset-0" />}
-      <div
-        {...popoverProps}
-        ref={popoverRef}
-        className={`z-10 shadow-lg border border-gray-300 bg-white rounded-md mt-2 ${className}`}
-      >
+      {!isNonModal && <div {...underlayProps} className={UnderlayStyle} />}
+      <div {...popoverProps} ref={popoverRef} className={PopoverStyle}>
         {!isNonModal && <DismissButton onDismiss={state.close} />}
         {children}
         <DismissButton onDismiss={state.close} />
