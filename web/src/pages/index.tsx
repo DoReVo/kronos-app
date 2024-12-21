@@ -4,7 +4,6 @@ import kyFactory from "ky";
 import QueryClientProvider from "../query/query-provider";
 import { ZONE_OPTIONS } from "@kronos/common";
 import type { PrayerTimeItem } from "@kronos/common";
-import { Collection, Text } from "react-aria-components";
 import type { Key } from "react-aria-components";
 import { useMemo, useState } from "react";
 import { atom, useAtomValue, useSetAtom } from "jotai";
@@ -125,7 +124,7 @@ function ZoneSelect() {
           return (
             <Section title={header}>
               {itemList.map((item) => (
-                <Item key={item.code} textValue={item.zone}>
+                <Item key={`${item.code}-${item.zone}`} textValue={item.zone}>
                   {item.zone}
                 </Item>
               ))}

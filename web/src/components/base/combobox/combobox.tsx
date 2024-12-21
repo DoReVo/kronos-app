@@ -12,7 +12,7 @@ export {
   Section as ComboBoxSection,
 } from "react-stately";
 
-const RootStyle = cs("flex-col", "w-full", "relative");
+const RootStyle = cs("uno-layer-base:flex-col", "w-full", "relative");
 const InputContainerStyle = cs("");
 const InputStyle = cs([
   "uno-layer-base:bg-purple-500",
