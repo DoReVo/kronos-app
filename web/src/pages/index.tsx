@@ -10,6 +10,7 @@ import { atom, useAtomValue, useSetAtom } from "jotai";
 import { DateTime } from "luxon";
 import { ComboBox } from "../components/base/combobox/combobox";
 import { Item, Section } from "react-stately";
+import { MethodToggle } from "../components/method-toggle";
 
 console.log("meta", import.meta.env);
 
@@ -48,7 +49,7 @@ function PageContent() {
   return (
     <div className="flex justify-between flex-col gap-8">
       <div>
-        <ZoneSelect />
+        <MethodToggle></MethodToggle>
       </div>
       <div className="flex gap-4 flex-col w-600px">
         <TimeCard Name="imsak" Time={data?.imsak ?? "7:00 PM"} />
