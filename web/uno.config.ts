@@ -21,7 +21,17 @@ export default defineConfig({
     }),
   ],
   theme: {
-    colors: {},
+    colors: {
+      text: {
+        DEFAULT: "white",
+      },
+      canvas: {
+        DEFAULT: "#000D15",
+      },
+      card: {
+        background: "#001420",
+      },
+    },
   },
   layers: {
     base: -1,

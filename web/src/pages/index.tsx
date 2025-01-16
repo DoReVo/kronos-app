@@ -11,6 +11,8 @@ import { DateTime } from "luxon";
 import { ComboBox } from "../components/base/combobox/combobox";
 import { Item, Section } from "react-stately";
 
+console.log("meta", import.meta.env);
+
 const createKy = () => {
   return kyFactory.create({
     prefixUrl: import.meta.env.PUBLIC_API_URL,
@@ -44,18 +46,20 @@ function PageContent() {
   });
 
   return (
-    <>
+    <div className="flex justify-between flex-col gap-8">
       <div>
         <ZoneSelect />
       </div>
-      <TimeCard Name="imsak" Time={data?.imsak ?? ""} />
-      <TimeCard Name="subuh" Time={data?.subuh ?? ""} />
-      <TimeCard Name="syuruk" Time={data?.syuruk ?? ""} />
-      <TimeCard Name="zohor" Time={data?.zohor ?? ""} />
-      <TimeCard Name="asar" Time={data?.asar ?? ""} />
-      <TimeCard Name="maghrib" Time={data?.maghrib ?? ""} />
-      <TimeCard Name="isyak" Time={data?.isyak ?? ""} />
-    </>
+      <div className="flex gap-4 flex-col w-600px">
+        <TimeCard Name="imsak" Time={data?.imsak ?? "7:00 PM"} />
+        <TimeCard Name="subuh" Time={data?.subuh ?? ""} />
+        <TimeCard Name="syuruk" Time={data?.syuruk ?? ""} />
+        <TimeCard Name="zohor" Time={data?.zohor ?? ""} />
+        <TimeCard Name="asar" Time={data?.asar ?? ""} />
+        <TimeCard Name="maghrib" Time={data?.maghrib ?? ""} />
+        <TimeCard Name="isyak" Time={data?.isyak ?? ""} />
+      </div>
+    </div>
   );
 }
 
