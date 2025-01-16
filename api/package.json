@@ -2,9 +2,11 @@
   "name": "@kronos/api",
   "scripts": {
     "dev": "wrangler dev src/index.ts",
-    "deploy": "wrangler deploy --minify src/index.ts"
+    "deploy": "wrangler deploy --minify src/index.ts",
+    "test": "vitest"
   },
   "dependencies": {
+    "@hono/zod-validator": "^0.4.2",
     "@kronos/common": "^1.0.0",
     "@types/luxon": "^3.3.4",
     "got": "^13.0.0",
