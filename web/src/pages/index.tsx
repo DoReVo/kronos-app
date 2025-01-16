@@ -13,6 +13,7 @@ import { Item, Section } from "react-stately";
 import { MethodToggle } from "../components/method-toggle";
 import { UserCoordinate } from "../components/user-coordinate";
 import { methodAtom } from "../atoms";
+import { StatusBar } from "../components/status-bar";
 
 console.log("meta", import.meta.env);
 
@@ -60,7 +61,11 @@ function PageContent() {
           <UserCoordinate />
         </div>
       )}
-      <div className="flex gap-4 flex-col w-600px">
+
+      <div className="flex justify-center">
+        <StatusBar />
+      </div>
+      <div className="flex gap-4 flex-col items-center w-600px">
         <TimeCard Name="imsak" Time={data?.imsak ?? "7:00 PM"} />
         <TimeCard Name="subuh" Time={data?.subuh ?? ""} />
         <TimeCard Name="syuruk" Time={data?.syuruk ?? ""} />
