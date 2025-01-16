@@ -22,6 +22,17 @@ export default defineConfig({
   ],
   theme: {
     colors: {
+      coordinate: {
+        background: {
+          DEFAULT: "#290025",
+        },
+      },
+      method: {
+        background: {
+          DEFAULT: "#001A2A",
+          selected: "#0D2635",
+        },
+      },
       text: {
         DEFAULT: "white",
       },
