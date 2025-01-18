@@ -4,6 +4,7 @@ import { fetchTime } from "./lib/jakim";
 import { ZONE_OPTIONS } from "@kronos/common";
 import { zValidator } from "@hono/zod-validator";
 import z from "zod";
+import { AladhanPrayerTimeProvider } from "./lib/time";
 
 type Bindings = {
   KronosKV: KVNamespace;
@@ -26,6 +27,29 @@ server.get("/", (c) => {
 server.get("/selectionoptions", async (c) => {
   return c.json(ZONE_OPTIONS);
 });
+
+server.get(
+  "/time/auto",
+  zValidator(
+    "query",
+    z
+      .object({
+        date: z.string().datetime({ offset: true }),
+        latitude: z.string(),
+        longitude: z.string(),
+      })
+      .required(),
+  ),
+
+  async (c) => {
+    const { date, latitude, longitude } = c.req.query();
+    console.log("From query string", latitude, longitude);
+
+    const time = new AladhanPrayerTimeProvider();
+    const res = await time.getTimeForDay(date, latitude, longitude);
+    return c.json(res);
+  },
+);
 
 server.get(
   "/time",

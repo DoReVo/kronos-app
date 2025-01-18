@@ -47,8 +47,10 @@ export class AladhanPrayerTimeProvider extends BasePrayerTimeProvider {
     latitude: string,
     longitude: string,
   ) {
-    const url = new URL(`${this.API_URL}/timings/${date}`);
+    const formattedDate = DateTime.fromISO(date).toFormat("dd-LL-yyyy");
+    const url = new URL(`${this.API_URL}/timings/${formattedDate}`);
     url.search = this.getSearchParams(latitude, longitude);
+    console.log("Fetching time for", formattedDate, latitude, longitude);
 
     try {
       const response = await ky.get(url).json();

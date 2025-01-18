@@ -2,8 +2,7 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { TimeCard } from "../components/time-card";
 import kyFactory from "ky";
 import QueryClientProvider from "../query/query-provider";
-import { ZONE_OPTIONS } from "@kronos/common";
-import type { PrayerTimeItem } from "@kronos/common";
+import { ZONE_OPTIONS, type DayPrayerTime } from "@kronos/common";
 import type { Key } from "react-aria-components";
 import { useMemo, useState } from "react";
 import { atom, useAtomValue, useSetAtom } from "jotai";
@@ -12,7 +11,7 @@ import { ComboBox } from "../components/base/combobox/combobox";
 import { Item, Section } from "react-stately";
 import { MethodToggle } from "../components/method-toggle";
 import { UserCoordinate } from "../components/user-coordinate";
-import { methodAtom } from "../atoms";
+import { latlongAtom, methodAtom } from "../atoms";
 import { StatusBar } from "../components/status-bar";
 
 console.log("meta", import.meta.env);
@@ -27,27 +26,26 @@ const ky = createKy();
 const selectedTime = atom<SelectedZoneInfo>();
 
 function PageContent() {
-  const selected = useAtomValue(selectedTime);
-
-  const today = DateTime.now().toISODate();
+  const latLong = useAtomValue(latlongAtom);
+  const today = DateTime.now().toISO();
 
   const { data } = useQuery({
-    queryKey: ["time", selected],
+    queryKey: ["time", "auto", "latLong"],
+    retry: 1,
+    retryDelay: 500,
     queryFn: async () => {
-      if (!selected || !today) return null;
-
       return await ky
-        .get("time", {
+        .get("time/auto", {
           searchParams: {
-            zone: selected?.code,
-            date: today,
+            date: today ?? "",
+            latitude: latLong[0] ?? "",
+            longitude: latLong[1] ?? "",
           },
         })
-        .json<PrayerTimeItem>();
+        .json<DayPrayerTime>();
     },
-    enabled: !!selected,
-    placeholderData: keepPreviousData,
   });
+  console.log("response", data);
 
   const method = useAtomValue(methodAtom);
 
@@ -66,7 +64,7 @@ function PageContent() {
         <StatusBar />
       </div>
       <div className="flex gap-4 flex-col items-center w-600px">
-        <TimeCard Name="imsak" Time={data?.imsak ?? "7:00 PM"} />
+        <TimeCard Name="imsak" Time={data?.imsak ?? ""} />
         <TimeCard Name="subuh" Time={data?.subuh ?? ""} />
         <TimeCard Name="syuruk" Time={data?.syuruk ?? ""} />
         <TimeCard Name="zohor" Time={data?.zohor ?? ""} />

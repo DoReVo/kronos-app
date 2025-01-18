@@ -2,6 +2,9 @@ import { useGeolocation } from "@uidotdev/usehooks";
 
 import cs from "clsx";
 import { Spinner } from "./base/spinner";
+import { useEffect } from "react";
+import { useSetAtom } from "jotai";
+import { latlongAtom } from "../atoms";
 
 const RootStyle = cs(["text-white", "flex flex-col gap-2"]);
 
@@ -16,6 +19,7 @@ export function UserCoordinate() {
     maximumAge: 0,
     timeout: Infinity,
   });
+  console.log("LATITUDE AND LONGITUDE", latitude, longitude);
 
   let errorMessage = null;
 
@@ -30,6 +34,12 @@ export function UserCoordinate() {
   }
 
   const hasLocation = latitude !== null && longitude !== null;
+
+  const setLatLong = useSetAtom(latlongAtom);
+
+  useEffect(() => {
+    setLatLong([latitude, longitude]);
+  }, [latitude, longitude]);
 
   return (
     <div className={RootStyle}>
