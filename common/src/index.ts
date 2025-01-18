@@ -1,18 +1,22 @@
+import z from "zod";
+
 export interface PrayerTime {
   Name: "imsak" | "subuh" | "syuruk" | "zohor" | "asar" | "maghrib" | "isyak";
   Time: string;
 }
 
-export interface PrayerTimeItem {
-  date: string;
-  imsak: string;
-  syuruk: string;
-  maghrib: string;
-  subuh: string;
-  zohor: string;
-  asar: string;
-  isyak: string;
-}
+export const DayPrayerTimeSchema = z.object({
+  date: z.string(),
+  imsak: z.string(),
+  syuruk: z.string(),
+  maghrib: z.string(),
+  subuh: z.string(),
+  zohor: z.string(),
+  asar: z.string(),
+  isyak: z.string(),
+});
+
+export type DayPrayerTime = z.infer<typeof DayPrayerTimeSchema>;
 
 export const ZONE_OPTIONS = {
   Johor: {
