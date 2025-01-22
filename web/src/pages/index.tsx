@@ -23,11 +23,14 @@ const ky = createKy();
 function PageContent() {
   const latLong = useAtomValue(latlongAtom);
   const today = DateTime.now().toISO();
+  const _today = DateTime.now().startOf("day").toISO();
 
   const { data } = useQuery({
-    queryKey: ["time", "auto", "latLong"],
+    queryKey: ["time", "auto", _today],
     retry: 1,
     retryDelay: 500,
+    refetchInterval: 1000,
+    enabled: latLong[0] !== null && latLong[1] !== null,
     select(data) {
       return Object.fromEntries(
         Object.entries(data).map(([key, value]) => [
