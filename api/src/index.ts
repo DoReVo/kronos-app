@@ -4,7 +4,7 @@ import { fetchTime } from "./lib/jakim";
 import { ZONE_OPTIONS } from "@kronos/common";
 import { zValidator } from "@hono/zod-validator";
 import z from "zod";
-import { AladhanPrayerTimeProvider } from "./lib/time";
+import { AladhanPrayerTimeProvider, CustomTimeProvider } from "./lib/time";
 
 type Bindings = {
   KronosKV: KVNamespace;
@@ -45,7 +45,7 @@ server.get(
     const { date, latitude, longitude } = c.req.query();
     console.log("From query string", latitude, longitude);
 
-    const time = new AladhanPrayerTimeProvider();
+    const time = new CustomTimeProvider();
     const res = await time.getTimeForDay(date, latitude, longitude);
     return c.json(res);
   },

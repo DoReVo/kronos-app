@@ -28,6 +28,14 @@ function PageContent() {
     queryKey: ["time", "auto", "latLong"],
     retry: 1,
     retryDelay: 500,
+    select(data) {
+      return Object.fromEntries(
+        Object.entries(data).map(([key, value]) => [
+          key,
+          DateTime.fromISO(value).toLocaleString(DateTime.TIME_SIMPLE),
+        ]),
+      );
+    },
     queryFn: async () => {
       return await ky
         .get("time/auto", {
