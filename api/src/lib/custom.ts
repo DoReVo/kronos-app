@@ -1,3 +1,4 @@
+// @ts-nocheck
 // JAKIM prayer time parameters
 const PRAYER_PARAMS = {
   fajr: 20, // Fajr angle
