@@ -29,7 +29,7 @@ function PageContent() {
     queryKey: ["time", "auto", _today],
     retry: 1,
     retryDelay: 500,
-    refetchInterval: 1000,
+    refetchInterval: 30000,
     enabled: latLong[0] !== null && latLong[1] !== null,
     select(data) {
       return Object.fromEntries(
