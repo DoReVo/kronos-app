@@ -13,9 +13,9 @@
   "license": "ISC",
   "devDependencies": {
     "@tsconfig/node18": "^18.2.4",
-    "del-cli": "^5.1.0",
-    "eslint": "^9.6.0",
+    "del-cli": "^6.0.0",
+    "eslint": "^9.21.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.5.2"
+    "typescript": "^5.8.2"
   }
 }
