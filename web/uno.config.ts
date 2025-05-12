@@ -2,13 +2,13 @@ import {
   defineConfig,
   presetIcons,
   presetTypography,
-  presetUno,
   presetWebFonts,
+  presetWind3,
 } from "unocss";
 
 export default defineConfig({
   presets: [
-    presetUno(),
+    presetWind3(),
     presetIcons(),
     presetTypography(),
     presetWebFonts({
