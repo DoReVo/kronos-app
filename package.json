@@ -7,7 +7,7 @@
   "type": "module",
   "scripts": {
     "build": "turbo run build",
-    "dev": "turbo run dev",
+    "dev": "turbo run build --filter=@kronos/common --no-daemon && turbo run dev",
     "lint": "turbo run lint",
     "test": "turbo run test",
     "start:server": "npm run dev -w api",
