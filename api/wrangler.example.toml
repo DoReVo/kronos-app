@@ -14,9 +14,9 @@ enabled = true
 
 # [vars]
 # MY_VARIABLE = "production_value"
-# [[kv_namespaces]]
-# binding = "Name"
-# id = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+[[kv_namespaces]]
+binding = "kronos"
+id = "random-id"
 # [[r2_buckets]]
 # binding = "MY_BUCKET"
 # bucket_name = "my-bucket"

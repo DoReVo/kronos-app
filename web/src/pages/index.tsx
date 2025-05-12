@@ -1,7 +1,6 @@
 import { type DayPrayerTime } from "@kronos/common";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
-import kyFactory from "ky";
 import { DateTime } from "luxon";
 import { latlongAtom, methodAtom } from "../atoms";
 import { MethodToggle } from "../components/method-toggle";
@@ -9,14 +8,7 @@ import { StatusBar } from "../components/status-bar";
 import { TimeCard } from "../components/time-card";
 import { UserCoordinate } from "../components/user-coordinate";
 import QueryClientProvider from "../query/query-provider";
-
-console.log("meta", import.meta.env);
-
-const createKy = () => {
-  return kyFactory.create({
-    prefixUrl: import.meta.env.PUBLIC_API_URL,
-  });
-};
+import { createKy } from "../api/ky";
 
 const ky = createKy();
 
@@ -51,7 +43,6 @@ function PageContent() {
         .json<DayPrayerTime>();
     },
   });
-  console.log("response", data);
 
   const method = useAtomValue(methodAtom);
 

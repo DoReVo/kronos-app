@@ -1,11 +1,6 @@
 import z from "zod";
 
-export interface PrayerTime {
-  Name: "imsak" | "subuh" | "syuruk" | "zohor" | "asar" | "maghrib" | "isyak";
-  Time: string;
-}
-
-export const DayPrayerTimeSchema = z.object({
+export const PrayerTimeSchema = z.object({
   date: z.string(),
   imsak: z.string(),
   syuruk: z.string(),
@@ -16,7 +11,71 @@ export const DayPrayerTimeSchema = z.object({
   isyak: z.string(),
 });
 
-export type DayPrayerTime = z.infer<typeof DayPrayerTimeSchema>;
+export const PrayerTimeArraySchema = z.array(PrayerTimeSchema);
+
+export const ZONE = z.enum([
+  "JHR01",
+  "JHR02",
+  "JHR03",
+  "JHR04",
+  "KDH01",
+  "KDH02",
+  "KDH03",
+  "KDH04",
+  "KDH05",
+  "KDH06",
+  "KDH07",
+  "KTN01",
+  "KTN03",
+  "MLK01",
+  "NGS01",
+  "NGS02",
+  "PHG01",
+  "PHG02",
+  "PHG03",
+  "PHG04",
+  "PHG05",
+  "PHG06",
+  "PLS01",
+  "PNG01",
+  "PRK01",
+  "PRK02",
+  "PRK03",
+  "PRK04",
+  "PRK05",
+  "PRK06",
+  "PRK07",
+  "SBH01",
+  "SBH02",
+  "SBH03",
+  "SBH04",
+  "SBH05",
+  "SBH06",
+  "SBH07",
+  "SBH08",
+  "SBH09",
+  "SGR01",
+  "SGR02",
+  "SGR03",
+  "SWK01",
+  "SWK02",
+  "SWK03",
+  "SWK04",
+  "SWK05",
+  "SWK06",
+  "SWK07",
+  "SWK08",
+  "SWK09",
+  "TRG01",
+  "TRG02",
+  "TRG03",
+  "TRG04",
+  "WLY01",
+  "WLY02",
+]);
+
+export type Zone = z.infer<typeof ZONE>;
+export type PrayerTime = z.infer<typeof PrayerTimeSchema>;
 
 export const ZONE_OPTIONS = {
   Johor: {
@@ -114,4 +173,4 @@ export const ZONE_OPTIONS = {
     WLY01: "Kuala Lumpur, Putrajaya",
     WLY02: "Labuan",
   },
-};
+} as const;

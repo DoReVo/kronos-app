@@ -1,25 +1,8 @@
-import { DayPrayerTime, DayPrayerTimeSchema } from "@kronos/common";
+import { PrayerTime, PrayerTimeSchema } from "@kronos/common";
 import ky, { HTTPError } from "ky";
 import { DateTime } from "luxon";
 import z from "zod";
-
-abstract class BasePrayerTimeProvider {
-  API_URL: string | null = null;
-
-  constructor() {}
-
-  abstract fetchTimeForDay(
-    date: string,
-    latitude: string,
-    longitude: string,
-  ): unknown;
-
-  abstract getTimeForDay(
-    date: string,
-    latitude: string,
-    longitude: string,
-  ): Promise<DayPrayerTime>;
-}
+import { BasePrayerTimeProvider } from "./provider";
 
 export class AladhanPrayerTimeProvider extends BasePrayerTimeProvider {
   API_URL = "https://api.aladhan.com/v1";
@@ -83,7 +66,7 @@ export class AladhanPrayerTimeProvider extends BasePrayerTimeProvider {
     const { timings: time, date } = parsedData.data;
     const datetime = DateTime.fromSeconds(date.timestamp);
 
-    return DayPrayerTimeSchema.parse({
+    return PrayerTimeSchema.parse({
       date: datetime.toISO(),
       imsak: time.Imsak,
       syuruk: time.Sunrise,
@@ -99,7 +82,7 @@ export class AladhanPrayerTimeProvider extends BasePrayerTimeProvider {
     date: string,
     latitude: string,
     longitude: string,
-  ): Promise<DayPrayerTime> {
+  ): Promise<PrayerTime> {
     return await this.fetchTimeForDay(date, latitude, longitude);
   }
 }
@@ -116,7 +99,7 @@ export class CustomTimeProvider extends BasePrayerTimeProvider {
   };
 
   // JAKIM adjustments in minutes
-  JAKIM_ADJUSTMENTS: Record<keyof Omit<DayPrayerTime, "date">, number> = {
+  JAKIM_ADJUSTMENTS: Record<keyof Omit<PrayerTime, "date">, number> = {
     imsak: 12,
     subuh: 12,
     syuruk: 0,
@@ -332,7 +315,7 @@ export class CustomTimeProvider extends BasePrayerTimeProvider {
     };
 
     // Calculate raw times
-    let times: Record<keyof DayPrayerTime, number | null | string> = {
+    let times: Record<keyof PrayerTime, number | null | string> = {
       date: _date.toISO() ?? "",
       subuh: this.calculateSubuh(commonParams),
       imsak: null,
@@ -364,7 +347,7 @@ export class CustomTimeProvider extends BasePrayerTimeProvider {
     if (useJakimAdjustments) {
       for (let prayer in times) {
         if (prayer in this.JAKIM_ADJUSTMENTS) {
-          const _prayer = prayer as keyof Omit<DayPrayerTime, "date">;
+          const _prayer = prayer as keyof Omit<PrayerTime, "date">;
           if (
             times[_prayer] &&
             this.JAKIM_ADJUSTMENTS[_prayer] &&
@@ -382,7 +365,7 @@ export class CustomTimeProvider extends BasePrayerTimeProvider {
         prayer,
         typeof time === "number" ? this.formatTimeWithLuxon(time) : time,
       ]),
-    ) as DayPrayerTime;
+    ) as PrayerTime;
 
     return formatted;
   }
@@ -391,7 +374,7 @@ export class CustomTimeProvider extends BasePrayerTimeProvider {
     date: string,
     latitude: string,
     longitude: string,
-  ): Promise<DayPrayerTime> {
+  ): Promise<PrayerTime> {
     const data = await this.fetchTimeForDay(date, latitude, longitude);
     return data;
   }
