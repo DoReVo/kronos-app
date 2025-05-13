@@ -1,10 +1,10 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { fetchTime } from "./lib/jakim";
-import { ZONE_OPTIONS } from "@kronos/common";
+import { ZONE_OPTIONS, ZoneSchema } from "@kronos/common";
 import { zValidator } from "@hono/zod-validator";
 import z from "zod";
-import { AladhanPrayerTimeProvider, CustomTimeProvider } from "./lib/time";
+import { CustomTimeProvider } from "./lib/time";
+import { JakimProvider } from "./lib/jakim";
 
 type Bindings = {
   KronosKV: KVNamespace;
@@ -37,16 +37,22 @@ server.get(
         date: z.string().datetime({ offset: true }),
         latitude: z.string(),
         longitude: z.string(),
+        useJakimAdjustments: z.boolean(),
       })
       .required(),
   ),
 
   async (c) => {
-    const { date, latitude, longitude } = c.req.query();
-    console.log("From query string", latitude, longitude);
+    const { date, latitude, longitude, useJakimAdjustments } =
+      c.req.valid("query");
 
     const time = new CustomTimeProvider();
-    const res = await time.getTimeForDay(date, latitude, longitude);
+    const res = await time.getTimeForDay(
+      date,
+      latitude,
+      longitude,
+      useJakimAdjustments,
+    );
     return c.json(res);
   },
 );
@@ -58,16 +64,17 @@ server.get(
     z
       .object({
         date: z.string().datetime({ offset: true }),
+        zone: ZoneSchema,
       })
       .required(),
   ),
   async (c) => {
-    const { date, zone } = c.req.query();
+    const { date, zone } = c.req.valid("query");
 
-    const KV = c.env.KronosKV;
+    const time = new JakimProvider();
+    const res = await time.getTimeForDay(date, zone);
 
-    const response = await fetchTime(zone, date, KV);
-    return c.json(response);
+    return c.json(res);
   },
 );
 

@@ -1,51 +1,89 @@
-import { PrayerTime } from "@kronos/common";
-import Joi from "joi";
-import { DateTime } from "luxon";
+import { PrayerTime, PrayerTimeArraySchema, Zone } from "@kronos/common";
+import { z } from "zod";
+import { DateTime, DateTimeOptions } from "luxon";
+import { BasePrayerTimeProvider } from "./provider";
+import { env } from "cloudflare:workers";
 
-const prayerTimeItemSchema = Joi.object({
-  hijri: Joi.string().required(),
-  date: Joi.string().required(),
-  day: Joi.string().required(),
-  imsak: Joi.string().required(),
-  fajr: Joi.string().required(),
-  syuruk: Joi.string().required(),
-  dhuhr: Joi.string().required(),
-  asr: Joi.string().required(),
-  maghrib: Joi.string().required(),
-  isha: Joi.string().required(),
+const timeSchema = z.object({
+  hijri: z.string(),
+  date: z.string(),
+  day: z.string(),
+  imsak: z.string(),
+  fajr: z.string(),
+  syuruk: z.string(),
+  dhuhr: z.string(),
+  asr: z.string(),
+  maghrib: z.string(),
+  isha: z.string(),
 });
 
-const schema = Joi.object({
-  prayerTime: Joi.array().items(prayerTimeItemSchema).required(),
-}).unknown();
+type TimeResponse = z.infer<typeof timeSchema>;
 
-const BASE_API_URL = "https://www.e-solat.gov.my/index.php";
+const yearlyResponseSchema = z.object({
+  prayerTime: z.array(timeSchema),
+});
 
-export async function fetchTime(zone: string, day: string, KV: KVNamespace) {
-  try {
-    let zoneData = await KV.get(zone);
+export class JakimProvider extends BasePrayerTimeProvider {
+  API_URL = "https://www.e-solat.gov.my/index.php";
 
-    if (!zoneData) {
-      zoneData = await _fetchYearlyForZone(zone);
-      // Save data
-      await KV.put(zone, JSON.stringify(zoneData));
-    } else {
-      zoneData = JSON.parse(zoneData as any);
+  sourceOpt: DateTimeOptions = { zone: "Asia/Kuala_Lumpur" };
+
+  constructor() {
+    super();
+  }
+
+  _generateZoneKey(zone: Zone, year: string) {
+    return `${zone}-${year}`;
+  }
+
+  _formatTime(timeStr: string, date: DateTime<true>) {
+    const time = DateTime.fromFormat(timeStr, "TT", this.sourceOpt);
+
+    if (!time.isValid) {
+      throw new Error(`Cannot parse time into luxon object: ${timeStr}`);
     }
 
-    const entry = (zoneData as any)?.find((entry: any) => {
-      return entry?.date === day;
-    });
-
-    return entry;
-  } catch (error) {
-    console.error(error);
+    return date
+      .set({
+        hour: time.hour,
+        minute: time.minute,
+        second: time.second,
+        millisecond: time.millisecond,
+      })
+      .toISO();
   }
-}
 
-async function _fetchYearlyForZone(zone: string) {
-  try {
-    const url = new URL(BASE_API_URL);
+  _formatYearlyResponse(data: TimeResponse[]): PrayerTime[] {
+    return data.map((day) => {
+      const date = DateTime.fromFormat(
+        day.date,
+        "dd-MMM-yyyy",
+        this.sourceOpt,
+      ).startOf("day");
+
+      if (!date.isValid) {
+        throw new Error(`Cannot parse date into luxon object: ${day.date}`);
+      }
+
+      const dateStr = date.toISO();
+
+      const dayData: PrayerTime = {
+        date: dateStr,
+        imsak: this._formatTime(day.imsak, date),
+        subuh: this._formatTime(day.fajr, date),
+        syuruk: this._formatTime(day.syuruk, date),
+        zohor: this._formatTime(day.dhuhr, date),
+        asar: this._formatTime(day.asr, date),
+        maghrib: this._formatTime(day.maghrib, date),
+        isyak: this._formatTime(day.isha, date),
+      };
+
+      return dayData;
+    });
+  }
+
+  async _getYearlyForZone(zone: Zone): Promise<TimeResponse[]> {
+    const url = new URL(this.API_URL);
 
     url.search = new URLSearchParams({
       r: "esolatApi/takwimsolat",
@@ -53,41 +91,75 @@ async function _fetchYearlyForZone(zone: string) {
       zone: zone,
     }).toString();
 
-    let res = await fetch(url.toString(), {
-      method: "GET",
-    });
+    let response = await (await fetch(url.toString())).json();
 
-    res = await res.json();
+    const validatedData = yearlyResponseSchema.parse(response);
+    return validatedData.prayerTime;
+  }
 
-    const validatedData = schema.validate(res);
+  async _saveZoneData(zone: Zone, year: string, zoneData: PrayerTime[]) {
+    const key = this._generateZoneKey(zone, year);
 
-    if (validatedData.error) {
-      throw new Error("Invalid data from JAKIM");
+    const zoneDataStr = JSON.stringify(zoneData);
+
+    await env.kronos.put(key, zoneDataStr);
+  }
+
+  async _getZoneData(zone: Zone, year: string) {
+    const key = this._generateZoneKey(zone, year);
+    const zoneData = await env.kronos.get(key);
+
+    if (!zoneData) return null;
+
+    const jsonZonedata: unknown = JSON.parse(zoneData);
+    return PrayerTimeArraySchema.parse(jsonZonedata);
+  }
+
+  _findDayTime(date: string, yearly: PrayerTime[]): PrayerTime | null {
+    const parsedDate = DateTime.fromISO(date).startOf("day");
+
+    if (!parsedDate.isValid) {
+      throw new Error(`Cannot parse date to find daily time: ${date}`);
     }
 
-    const formattedData = (validatedData?.value as any)?.prayerTime?.map(
-      (day: any) => {
-        let dayData: {
-          [K in PrayerTime["Name"]]: string;
-        } & { date: string };
+    const dateStr = parsedDate.toISO();
 
-        dayData = {
-          date: DateTime.fromFormat(day.date, "dd-MMM-yyyy").toISODate()!,
-          imsak: DateTime.fromFormat(day.imsak, "TT").toFormat("t"),
-          subuh: DateTime.fromFormat(day.fajr, "TT").toFormat("t"),
-          syuruk: DateTime.fromFormat(day.syuruk, "TT").toFormat("t"),
-          zohor: DateTime.fromFormat(day.dhuhr, "TT").toFormat("t"),
-          asar: DateTime.fromFormat(day.asr, "TT").toFormat("t"),
-          maghrib: DateTime.fromFormat(day.maghrib, "TT").toFormat("t"),
-          isyak: DateTime.fromFormat(day.isha, "TT").toFormat("t"),
-        };
+    const entry = yearly.find((entry) => {
+      return entry.date === dateStr;
+    });
 
-        return dayData;
-      },
+    if (!entry) return null;
+
+    return entry;
+  }
+
+  async fetchTimeForDay(date: string, zone: Zone): Promise<PrayerTime> {
+    const parsedDate = DateTime.fromISO(date);
+
+    if (!parsedDate.isValid)
+      throw new Error("Failed to parse date to fetch time");
+
+    const year = parsedDate.year.toString();
+    let yearlyData = await this._getZoneData(zone, year);
+
+    if (!yearlyData) {
+      console.log("Zone data does not exist", zone, year);
+      const rawYearly = await this._getYearlyForZone(zone);
+      yearlyData = this._formatYearlyResponse(rawYearly);
+      await this._saveZoneData(zone, year, yearlyData);
+    }
+
+    const entry = this._findDayTime(
+      parsedDate.startOf("day").toISO(),
+      yearlyData,
     );
 
-    return formattedData;
-  } catch (error) {
-    console.error(error);
+    if (!entry) throw new Error("Could not find time for day");
+
+    return entry;
+  }
+
+  async getTimeForDay(date: string, zone: Zone): Promise<PrayerTime> {
+    return await this.fetchTimeForDay(date, zone);
   }
 }

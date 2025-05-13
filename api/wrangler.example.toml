@@ -1,15 +1,22 @@
-name = "api"
-compatibility_date = "2023-01-01"
+name = "kronos-api"
+compatibility_date = "2025-01-01"
+
+routes = {
+  {pattern = "kronos-api.izzatfaris.site"}
+}
 
 [dev]
 ip = "0.0.0.0"
 port = 4305
 
+[observability.logs]
+enabled = true
+
 # [vars]
 # MY_VARIABLE = "production_value"
 [[kv_namespaces]]
-# binding = "Name"
-# id = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+binding = "kronos"
+id = "random-id"
 # [[r2_buckets]]
 # binding = "MY_BUCKET"
 # bucket_name = "my-bucket"
