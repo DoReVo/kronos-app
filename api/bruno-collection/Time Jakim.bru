@@ -1,0 +1,16 @@
+meta {
+  name: Time Jakim
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{API_URL}}/time?date=2025-01-01T00:00:00Z&zone=WLY01
+  body: none
+  auth: inherit
+}
+
+params:query {
+  date: 2025-01-01T00:00:00Z
+  zone: WLY01
+}

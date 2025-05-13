@@ -13,7 +13,7 @@ export const PrayerTimeSchema = z.object({
 
 export const PrayerTimeArraySchema = z.array(PrayerTimeSchema);
 
-export const ZONE = z.enum([
+export const ZoneSchema = z.enum([
   "JHR01",
   "JHR02",
   "JHR03",
@@ -74,7 +74,7 @@ export const ZONE = z.enum([
   "WLY02",
 ]);
 
-export type Zone = z.infer<typeof ZONE>;
+export type Zone = z.infer<typeof ZoneSchema>;
 export type PrayerTime = z.infer<typeof PrayerTimeSchema>;
 
 export const ZONE_OPTIONS = {

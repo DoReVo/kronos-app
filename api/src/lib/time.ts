@@ -374,8 +374,14 @@ export class CustomTimeProvider extends BasePrayerTimeProvider {
     date: string,
     latitude: string,
     longitude: string,
+    useJakimAdjustments: boolean = false,
   ): Promise<PrayerTime> {
-    const data = await this.fetchTimeForDay(date, latitude, longitude);
+    const data = await this.fetchTimeForDay(
+      date,
+      latitude,
+      longitude,
+      useJakimAdjustments,
+    );
     return data;
   }
 }
