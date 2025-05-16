@@ -4,6 +4,7 @@ import {
   presetTypography,
   presetWebFonts,
   presetWind4,
+  transformerVariantGroup,
 } from "unocss";
 
 export default defineConfig({
@@ -20,6 +21,7 @@ export default defineConfig({
       },
     }),
   ],
+  transformers: [transformerVariantGroup()],
   theme: {
     colors: {
       coordinate: {

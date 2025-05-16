@@ -1,4 +1,4 @@
-import { type DayPrayerTime } from "@kronos/common";
+import { type PrayerTime } from "@kronos/common";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { DateTime } from "luxon";
@@ -9,6 +9,7 @@ import { TimeCard } from "../components/time-card";
 import { UserCoordinate } from "../components/user-coordinate";
 import QueryClientProvider from "../query/query-provider";
 import { createKy } from "../api/ky";
+import { Switch } from "../components/base/Switch";
 
 const ky = createKy();
 
@@ -29,7 +30,7 @@ function PageContent() {
           key,
           DateTime.fromISO(value).toLocaleString(DateTime.TIME_SIMPLE),
         ]),
-      );
+      ) as PrayerTime;
     },
     queryFn: async () => {
       return await ky
@@ -38,9 +39,10 @@ function PageContent() {
             date: today ?? "",
             latitude: latLong[0] ?? "",
             longitude: latLong[1] ?? "",
+            useJakimAdjustments: true,
           },
         })
-        .json<DayPrayerTime>();
+        .json<PrayerTime>();
     },
   });
 
@@ -50,6 +52,9 @@ function PageContent() {
     <div className="flex justify-between flex-col gap-8">
       <div>
         <MethodToggle></MethodToggle>
+      </div>
+      <div>
+        <Switch>Use Jakim time</Switch>
       </div>
       {method === "auto" && (
         <div>
