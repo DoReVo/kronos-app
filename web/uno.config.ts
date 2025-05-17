@@ -24,6 +24,11 @@ export default defineConfig({
   transformers: [transformerVariantGroup()],
   theme: {
     colors: {
+      brand: "#290025",
+      surface: {
+        DEFAULT: "#001A2A",
+        light: "#0D2635",
+      },
       coordinate: {
         background: {
           DEFAULT: "#290025",

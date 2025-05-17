@@ -10,6 +10,7 @@ import { UserCoordinate } from "../components/user-coordinate";
 import QueryClientProvider from "../query/query-provider";
 import { createKy } from "../api/ky";
 import { Switch } from "../components/base/Switch";
+import { useState } from "react";
 
 const ky = createKy();
 
@@ -18,8 +19,10 @@ function PageContent() {
   const today = DateTime.now().toISO();
   const _today = DateTime.now().startOf("day").toISO();
 
+  const [useAdjustment, setUseAdjustment] = useState(false);
+
   const { data } = useQuery({
-    queryKey: ["time", "auto", _today],
+    queryKey: ["time", "auto", _today, useAdjustment],
     retry: 1,
     retryDelay: 500,
     refetchInterval: 30000,
@@ -39,7 +42,7 @@ function PageContent() {
             date: today ?? "",
             latitude: latLong[0] ?? "",
             longitude: latLong[1] ?? "",
-            useJakimAdjustments: true,
+            useJakimAdjustments: useAdjustment,
           },
         })
         .json<PrayerTime>();
@@ -48,18 +51,26 @@ function PageContent() {
 
   const method = useAtomValue(methodAtom);
 
+  const onChangeAdjustment = (value: boolean) => {
+    setUseAdjustment(value);
+  };
+
   return (
     <div className="flex justify-between flex-col gap-8">
       <div>
         <MethodToggle></MethodToggle>
       </div>
-      <div>
-        <Switch>Use Jakim time</Switch>
-      </div>
       {method === "auto" && (
-        <div>
-          <UserCoordinate />
-        </div>
+        <>
+          <div className="flex justify-center">
+            <Switch isSelected={useAdjustment} onChange={onChangeAdjustment}>
+              Use Jakim time
+            </Switch>
+          </div>
+          <div>
+            <UserCoordinate />
+          </div>
+        </>
       )}
 
       <div className="flex justify-center">
