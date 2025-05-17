@@ -77,13 +77,13 @@ function PageContent() {
         <StatusBar />
       </div>
       <div className="flex gap-4 flex-col items-center w-600px">
-        <TimeCard Name="imsak" Time={data?.imsak ?? ""} />
-        <TimeCard Name="subuh" Time={data?.subuh ?? ""} />
-        <TimeCard Name="syuruk" Time={data?.syuruk ?? ""} />
-        <TimeCard Name="zohor" Time={data?.zohor ?? ""} />
-        <TimeCard Name="asar" Time={data?.asar ?? ""} />
-        <TimeCard Name="maghrib" Time={data?.maghrib ?? ""} />
-        <TimeCard Name="isyak" Time={data?.isyak ?? ""} />
+        <TimeCard name="imsak" time={data?.imsak ?? ""} />
+        <TimeCard name="subuh" time={data?.subuh ?? ""} />
+        <TimeCard name="syuruk" time={data?.syuruk ?? ""} />
+        <TimeCard name="zohor" time={data?.zohor ?? ""} />
+        <TimeCard name="asar" time={data?.asar ?? ""} />
+        <TimeCard name="maghrib" time={data?.maghrib ?? ""} />
+        <TimeCard name="isyak" time={data?.isyak ?? ""} />
       </div>
     </div>
   );
