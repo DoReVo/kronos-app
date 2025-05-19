@@ -2,7 +2,7 @@ import type { Key } from "react-aria";
 import { ComboBox } from "./base/combo-box";
 import { ZONE_OPTIONS, ZoneSchema } from "@kronos/common";
 import { zoneAtom } from "../atoms";
-import { useSetAtom } from "jotai";
+import { useAtom } from "jotai";
 
 export function ZoneSelector() {
   const zones = Object.entries(ZONE_OPTIONS).map(([key, value]) => {
@@ -16,7 +16,7 @@ export function ZoneSelector() {
     };
   });
 
-  const setZoneAtom = useSetAtom(zoneAtom);
+  const [zone, setZoneAtom] = useAtom(zoneAtom);
 
   const onChangeHandler = (key: Key | null) => {
     const validZone = ZoneSchema.parse(key);
@@ -25,7 +25,7 @@ export function ZoneSelector() {
   };
 
   return (
-    <ComboBox onSelectionChange={onChangeHandler}>
+    <ComboBox selectedKey={zone} onSelectionChange={onChangeHandler}>
       {zones.map((entry) => (
         <ComboBox.Section
           key={entry.title}
