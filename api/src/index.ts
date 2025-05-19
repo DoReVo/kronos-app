@@ -58,7 +58,7 @@ server.get(
 );
 
 server.get(
-  "/time",
+  "/time/manual",
   zValidator(
     "query",
     z

@@ -19,7 +19,6 @@ export function UserCoordinate() {
     maximumAge: 0,
     timeout: Infinity,
   });
-  console.log("LATITUDE AND LONGITUDE", latitude, longitude);
 
   let errorMessage = null;
 

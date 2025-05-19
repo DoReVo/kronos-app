@@ -45,6 +45,7 @@ export default defineConfig({
       },
       canvas: {
         DEFAULT: "#000D15",
+        light: `color-mix(in hsl, #000D15 95%, white)`,
       },
       card: {
         background: "#001420",

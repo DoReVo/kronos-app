@@ -2,7 +2,7 @@ import { type PrayerTime } from "@kronos/common";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { DateTime } from "luxon";
-import { latlongAtom, methodAtom } from "../atoms";
+import { latlongAtom, methodAtom, zoneAtom } from "../atoms";
 import { MethodToggle } from "../components/method-toggle";
 import { StatusBar } from "../components/status-bar";
 import { TimeCard } from "../components/time-card";
@@ -11,6 +11,7 @@ import QueryClientProvider from "../query/query-provider";
 import { createKy } from "../api/ky";
 import { Switch } from "../components/base/Switch";
 import { useState } from "react";
+import { ZoneSelector } from "../components/ZoneSelector";
 
 const ky = createKy();
 
@@ -19,14 +20,15 @@ function PageContent() {
   const today = DateTime.now().toISO();
   const _today = DateTime.now().startOf("day").toISO();
 
+  const method = useAtomValue(methodAtom);
   const [useAdjustment, setUseAdjustment] = useState(false);
 
-  const { data } = useQuery({
+  const { data: autoZoneData } = useQuery({
     queryKey: ["time", "auto", _today, useAdjustment],
     retry: 1,
     retryDelay: 500,
     refetchInterval: 30000,
-    enabled: latLong[0] !== null && latLong[1] !== null,
+    enabled: latLong[0] !== null && latLong[1] !== null && method === "auto",
     select(data) {
       return Object.fromEntries(
         Object.entries(data).map(([key, value]) => [
@@ -49,7 +51,35 @@ function PageContent() {
     },
   });
 
-  const method = useAtomValue(methodAtom);
+  const zone = useAtomValue(zoneAtom);
+
+  const { data: manualZoneData } = useQuery({
+    queryKey: ["time", "manual", zone],
+    retry: 1,
+    retryDelay: 500,
+    refetchInterval: 30000,
+    enabled: zone !== null && method === "manual",
+    select(data) {
+      return Object.fromEntries(
+        Object.entries(data).map(([key, value]) => [
+          key,
+          DateTime.fromISO(value).toLocaleString(DateTime.TIME_SIMPLE),
+        ]),
+      ) as PrayerTime;
+    },
+    queryFn: async () => {
+      return await ky
+        .get("time/manual", {
+          searchParams: {
+            date: today,
+            zone: zone!,
+          },
+        })
+        .json<PrayerTime>();
+    },
+  });
+
+  const data = method === "auto" ? autoZoneData : manualZoneData;
 
   const onChangeAdjustment = (value: boolean) => {
     setUseAdjustment(value);
@@ -69,6 +99,14 @@ function PageContent() {
           </div>
           <div>
             <UserCoordinate />
+          </div>
+        </>
+      )}
+
+      {method === "manual" && (
+        <>
+          <div className="mx-auto">
+            <ZoneSelector />
           </div>
         </>
       )}
