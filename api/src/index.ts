@@ -37,7 +37,7 @@ server.get(
         date: z.string().datetime({ offset: true }),
         latitude: z.string(),
         longitude: z.string(),
-        useJakimAdjustments: z.boolean(),
+        useJakimAdjustments: z.coerce.boolean(),
       })
       .required(),
   ),
@@ -58,7 +58,7 @@ server.get(
 );
 
 server.get(
-  "/time",
+  "/time/manual",
   zValidator(
     "query",
     z

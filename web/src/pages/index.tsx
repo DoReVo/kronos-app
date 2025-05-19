@@ -1,14 +1,17 @@
-import { type DayPrayerTime } from "@kronos/common";
+import { type PrayerTime } from "@kronos/common";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { DateTime } from "luxon";
-import { latlongAtom, methodAtom } from "../atoms";
+import { latlongAtom, methodAtom, zoneAtom } from "../atoms";
 import { MethodToggle } from "../components/method-toggle";
 import { StatusBar } from "../components/status-bar";
 import { TimeCard } from "../components/time-card";
 import { UserCoordinate } from "../components/user-coordinate";
 import QueryClientProvider from "../query/query-provider";
 import { createKy } from "../api/ky";
+import { Switch } from "../components/base/Switch";
+import { useState } from "react";
+import { ZoneSelector } from "../components/ZoneSelector";
 
 const ky = createKy();
 
@@ -17,19 +20,22 @@ function PageContent() {
   const today = DateTime.now().toISO();
   const _today = DateTime.now().startOf("day").toISO();
 
-  const { data } = useQuery({
-    queryKey: ["time", "auto", _today],
+  const method = useAtomValue(methodAtom);
+  const [useAdjustment, setUseAdjustment] = useState(false);
+
+  const { data: autoZoneData } = useQuery({
+    queryKey: ["time", "auto", _today, useAdjustment],
     retry: 1,
     retryDelay: 500,
     refetchInterval: 30000,
-    enabled: latLong[0] !== null && latLong[1] !== null,
+    enabled: latLong[0] !== null && latLong[1] !== null && method === "auto",
     select(data) {
       return Object.fromEntries(
         Object.entries(data).map(([key, value]) => [
           key,
           DateTime.fromISO(value).toLocaleString(DateTime.TIME_SIMPLE),
         ]),
-      );
+      ) as PrayerTime;
     },
     queryFn: async () => {
       return await ky
@@ -38,13 +44,46 @@ function PageContent() {
             date: today ?? "",
             latitude: latLong[0] ?? "",
             longitude: latLong[1] ?? "",
+            useJakimAdjustments: useAdjustment,
           },
         })
-        .json<DayPrayerTime>();
+        .json<PrayerTime>();
     },
   });
 
-  const method = useAtomValue(methodAtom);
+  const zone = useAtomValue(zoneAtom);
+
+  const { data: manualZoneData } = useQuery({
+    queryKey: ["time", "manual", zone],
+    retry: 1,
+    retryDelay: 500,
+    refetchInterval: 30000,
+    enabled: zone !== null && method === "manual",
+    select(data) {
+      return Object.fromEntries(
+        Object.entries(data).map(([key, value]) => [
+          key,
+          DateTime.fromISO(value).toLocaleString(DateTime.TIME_SIMPLE),
+        ]),
+      ) as PrayerTime;
+    },
+    queryFn: async () => {
+      return await ky
+        .get("time/manual", {
+          searchParams: {
+            date: today,
+            zone: zone!,
+          },
+        })
+        .json<PrayerTime>();
+    },
+  });
+
+  const data = method === "auto" ? autoZoneData : manualZoneData;
+
+  const onChangeAdjustment = (value: boolean) => {
+    setUseAdjustment(value);
+  };
 
   return (
     <div className="flex justify-between flex-col gap-8">
@@ -52,22 +91,37 @@ function PageContent() {
         <MethodToggle></MethodToggle>
       </div>
       {method === "auto" && (
-        <div>
-          <UserCoordinate />
-        </div>
+        <>
+          <div className="flex justify-center">
+            <Switch isSelected={useAdjustment} onChange={onChangeAdjustment}>
+              Use Jakim time
+            </Switch>
+          </div>
+          <div>
+            <UserCoordinate />
+          </div>
+        </>
+      )}
+
+      {method === "manual" && (
+        <>
+          <div className="mx-auto">
+            <ZoneSelector />
+          </div>
+        </>
       )}
 
       <div className="flex justify-center">
         <StatusBar />
       </div>
       <div className="flex gap-4 flex-col items-center w-600px">
-        <TimeCard Name="imsak" Time={data?.imsak ?? ""} />
-        <TimeCard Name="subuh" Time={data?.subuh ?? ""} />
-        <TimeCard Name="syuruk" Time={data?.syuruk ?? ""} />
-        <TimeCard Name="zohor" Time={data?.zohor ?? ""} />
-        <TimeCard Name="asar" Time={data?.asar ?? ""} />
-        <TimeCard Name="maghrib" Time={data?.maghrib ?? ""} />
-        <TimeCard Name="isyak" Time={data?.isyak ?? ""} />
+        <TimeCard name="imsak" time={data?.imsak ?? ""} />
+        <TimeCard name="subuh" time={data?.subuh ?? ""} />
+        <TimeCard name="syuruk" time={data?.syuruk ?? ""} />
+        <TimeCard name="zohor" time={data?.zohor ?? ""} />
+        <TimeCard name="asar" time={data?.asar ?? ""} />
+        <TimeCard name="maghrib" time={data?.maghrib ?? ""} />
+        <TimeCard name="isyak" time={data?.isyak ?? ""} />
       </div>
     </div>
   );

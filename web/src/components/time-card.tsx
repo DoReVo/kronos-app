@@ -1,4 +1,3 @@
-import type { PrayerTime } from "@kronos/common";
 import cs from "clsx";
 
 const RootStyle = cs([
@@ -11,11 +10,16 @@ const RootStyle = cs([
   "p-4 text-2xl",
 ]);
 
-export function TimeCard(props: PrayerTime) {
+interface Props {
+  name: string;
+  time: string;
+}
+
+export function TimeCard(props: Props) {
   return (
     <div className={RootStyle}>
-      <div>{props.Name.toUpperCase()}</div>
-      <div>{props.Time}</div>
+      <div>{props.name.toUpperCase()}</div>
+      <div>{props.time}</div>
     </div>
   );
 }

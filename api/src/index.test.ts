@@ -95,3 +95,13 @@ describe("API server", async () => {
     expect(res.status).toBe(200);
   });
 });
+
+describe("Sandbox", async () => {
+  test("Hehe", async () => {
+    const myFunc = (val) => (String(val), Number());
+
+    const x = myFunc(3);
+
+    console.log(x);
+  });
+});

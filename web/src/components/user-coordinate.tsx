@@ -19,7 +19,6 @@ export function UserCoordinate() {
     maximumAge: 0,
     timeout: Infinity,
   });
-  console.log("LATITUDE AND LONGITUDE", latitude, longitude);
 
   let errorMessage = null;
 
@@ -43,7 +42,7 @@ export function UserCoordinate() {
 
   return (
     <div className={RootStyle}>
-      <div className="font-bold text-md text-center">Your Location</div>
+      <div className="text-md text-center">Your Location</div>
 
       {loading && (
         <div className="flex items-center justify-center">
