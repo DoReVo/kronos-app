@@ -1,6 +1,11 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { ZONE_OPTIONS, ZoneSchema } from "@kronos/common";
+import {
+  dateTimeToCommonDay,
+  isoToCommonDateTime,
+  ZONE_OPTIONS,
+  ZoneSchema,
+} from "@kronos/common";
 import { zValidator } from "@hono/zod-validator";
 import z from "zod";
 import { CustomTimeProvider } from "./lib/time";
@@ -71,8 +76,16 @@ server.get(
   async (c) => {
     const { date, zone } = c.req.valid("query");
 
+    let datetime = isoToCommonDateTime(date);
+
+    if (!datetime) {
+      throw new Error("Invalid date given");
+    }
+
+    datetime = dateTimeToCommonDay(datetime);
+
     const time = new JakimProvider();
-    const res = await time.getTimeForDay(date, zone);
+    const res = await time.getTimeForDay(datetime, zone);
 
     return c.json(res);
   },

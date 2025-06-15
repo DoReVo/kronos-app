@@ -1,8 +1,14 @@
-import { PrayerTime, PrayerTimeArraySchema, Zone } from "@kronos/common";
+import {
+  dateTimeToCommonDay,
+  PrayerTime,
+  PrayerTimeArraySchema,
+  Zone,
+} from "@kronos/common";
 import { z } from "zod";
 import { DateTime, DateTimeOptions } from "luxon";
 import { BasePrayerTimeProvider } from "./provider";
 import { env } from "cloudflare:workers";
+import { TimeNotFound } from "../errors/errors";
 
 const timeSchema = z.object({
   hijri: z.string(),
@@ -55,11 +61,9 @@ export class JakimProvider extends BasePrayerTimeProvider {
 
   _formatYearlyResponse(data: TimeResponse[]): PrayerTime[] {
     return data.map((day) => {
-      const date = DateTime.fromFormat(
-        day.date,
-        "dd-MMM-yyyy",
-        this.sourceOpt,
-      ).startOf("day");
+      const date = DateTime.fromFormat(day.date, "dd-MMM-yyyy", this.sourceOpt)
+        .toUTC()
+        .startOf("day");
 
       if (!date.isValid) {
         throw new Error(`Cannot parse date into luxon object: ${day.date}`);
@@ -115,14 +119,13 @@ export class JakimProvider extends BasePrayerTimeProvider {
     return PrayerTimeArraySchema.parse(jsonZonedata);
   }
 
-  _findDayTime(date: string, yearly: PrayerTime[]): PrayerTime | null {
-    const parsedDate = DateTime.fromISO(date).startOf("day");
-
-    if (!parsedDate.isValid) {
-      throw new Error(`Cannot parse date to find daily time: ${date}`);
-    }
-
+  _findDayTime(
+    parsedDate: DateTime<true>,
+    yearly: PrayerTime[],
+  ): PrayerTime | null {
     const dateStr = parsedDate.toISO();
+
+    console.log(`Finding time of day of ${dateStr}`);
 
     const entry = yearly.find((entry) => {
       return entry.date === dateStr;
@@ -133,12 +136,10 @@ export class JakimProvider extends BasePrayerTimeProvider {
     return entry;
   }
 
-  async fetchTimeForDay(date: string, zone: Zone): Promise<PrayerTime> {
-    const parsedDate = DateTime.fromISO(date);
-
-    if (!parsedDate.isValid)
-      throw new Error("Failed to parse date to fetch time");
-
+  async fetchTimeForDay(
+    parsedDate: DateTime<true>,
+    zone: Zone,
+  ): Promise<PrayerTime> {
     const year = parsedDate.year.toString();
     let yearlyData = await this._getZoneData(zone, year);
 
@@ -149,17 +150,16 @@ export class JakimProvider extends BasePrayerTimeProvider {
       await this._saveZoneData(zone, year, yearlyData);
     }
 
-    const entry = this._findDayTime(
-      parsedDate.startOf("day").toISO(),
-      yearlyData,
-    );
+    const dateToFind = dateTimeToCommonDay(parsedDate);
 
-    if (!entry) throw new Error("Could not find time for day");
+    const entry = this._findDayTime(dateToFind, yearlyData);
+
+    if (!entry) throw new TimeNotFound(dateToFind);
 
     return entry;
   }
 
-  async getTimeForDay(date: string, zone: Zone): Promise<PrayerTime> {
+  async getTimeForDay(date: DateTime<true>, zone: Zone): Promise<PrayerTime> {
     return await this.fetchTimeForDay(date, zone);
   }
 }

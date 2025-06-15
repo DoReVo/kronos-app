@@ -6,7 +6,8 @@
     "removeComments": true,
     "importsNotUsedAsValues": "remove",
     "allowSyntheticDefaultImports": true,
-    "declaration": true
+    "declaration": true,
+    "allowImportingTsExtensions": true
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist"],

@@ -1,4 +1,5 @@
 import z from "zod";
+export * from "./utils.ts";
 
 export const PrayerTimeSchema = z.object({
   date: z.string(),

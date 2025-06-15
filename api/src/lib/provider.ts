@@ -1,19 +1,19 @@
-import { DayPrayerTime } from "@kronos/common";
+import { PrayerTime, Zone } from "@kronos/common";
+import { DateTime } from "luxon";
 
 export abstract class BasePrayerTimeProvider {
   API_URL: string | null = null;
 
   constructor() {}
 
-  abstract fetchTimeForDay(
-    date: string,
+  abstract getTimeForDay(
+    date: DateTime<true>,
     latitude: string,
     longitude: string,
-  ): unknown;
+  ): Promise<PrayerTime>;
 
   abstract getTimeForDay(
-    date: string,
-    latitude: string,
-    longitude: string,
-  ): Promise<DayPrayerTime>;
+    datetime: DateTime<true>,
+    zone: Zone,
+  ): Promise<PrayerTime>;
 }
