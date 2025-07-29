@@ -43,13 +43,15 @@ export class JakimProvider extends BasePrayerTimeProvider {
   }
 
   _formatTime(timeStr: string, date: DateTime<true>) {
-    const time = DateTime.fromFormat(timeStr, "TT", this.sourceOpt);
+    const time = DateTime.fromFormat(timeStr, "TT", this.sourceOpt).setZone(
+      "UTC",
+    );
 
     if (!time.isValid) {
       throw new Error(`Cannot parse time into luxon object: ${timeStr}`);
     }
 
-    return date
+    const output = date
       .set({
         hour: time.hour,
         minute: time.minute,
@@ -57,12 +59,14 @@ export class JakimProvider extends BasePrayerTimeProvider {
         millisecond: time.millisecond,
       })
       .toISO();
+
+    return output;
   }
 
   _formatYearlyResponse(data: TimeResponse[]): PrayerTime[] {
     return data.map((day) => {
       const date = DateTime.fromFormat(day.date, "dd-MMM-yyyy", this.sourceOpt)
-        .toUTC()
+        .setZone("UTC")
         .startOf("day");
 
       if (!date.isValid) {
@@ -124,8 +128,6 @@ export class JakimProvider extends BasePrayerTimeProvider {
     yearly: PrayerTime[],
   ): PrayerTime | null {
     const dateStr = parsedDate.toISO();
-
-    console.log(`Finding time of day of ${dateStr}`);
 
     const entry = yearly.find((entry) => {
       return entry.date === dateStr;
