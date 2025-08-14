@@ -1,16 +1,23 @@
 ---
-
+import Link from "../components/navigation-link.astro";
 ---
 
-<div class="flex min-h-screen font-sans p-4 justify-center">
-  <nav class="flex flex-col">
-    <a>Prayer Time</a>
-    <a>Currency Converter</a>
-    <a>TimeZone Converter</a>
-    <a>Unit Converter</a>
-    <a>Net Pay Calculator</a>
+<div class="flex min-h-screen font-sans p-4 justify-center gap-4">
+  <nav
+    class="sm:flex gap-2 flex-col px-4 rounded border-card-border hidden none"
+  >
+    <div class="px-4 pb-4 font-bold text-card-text">Applications</div>
+    <Link link="/" label="Prayer Time" />
+    <Link link="/" label="Covid Dashboard">Covid Dashboard</Link>
+    <Link link="/" label="Bantu" />
+    <Link link="/" label="Sensasi" />
+    <div class="p-4 font-bold text-card-text">Utilities</div>
+    <Link link="/" label="Currency Converter" />
+    <Link link="/" label="TimeZone Converter" />
+    <Link link="/" label="Unit Converter" />
+    <Link link="/" label="Net Pay Calculator" />
   </nav>
-  <main class="flex items-center flex-col flex-[1_0_0] max-w-5xl">
+  <main class="flex flex-col flex-[1_0_0] max-w-xl">
     <slot />
   </main>
 </div>
