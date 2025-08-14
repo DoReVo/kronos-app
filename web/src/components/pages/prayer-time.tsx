@@ -2,16 +2,16 @@ import { type PrayerTime } from "@kronos/common";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { DateTime } from "luxon";
-import { latlongAtom, methodAtom, zoneAtom } from "../atoms";
-import { MethodToggle } from "../components/method-toggle";
-import { StatusBar } from "../components/status-bar";
-import { TimeCard } from "../components/time-card";
-import { UserCoordinate } from "../components/user-coordinate";
-import QueryClientProvider from "../query/query-provider";
-import { createKy } from "../api/ky";
-import { Switch } from "../components/base/Switch";
+import { latlongAtom, methodAtom, zoneAtom } from "../../atoms";
+import { MethodToggle } from "../method-toggle";
+import { StatusBar } from "../status-bar";
+import { TimeCard } from "../time-card";
+import { UserCoordinate } from "../user-coordinate";
+import QueryClientProvider from "../../query/query-provider";
+import { createKy } from "../../api/ky";
+import { Switch } from "../base/Switch";
 import { useState } from "react";
-import { ZoneSelector } from "../components/ZoneSelector";
+import { ZoneSelector } from "../ZoneSelector";
 
 const ky = createKy();
 
