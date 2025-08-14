@@ -2,7 +2,7 @@ import cs from "clsx";
 
 const RootStyle = cs([
   "flex",
-  "w-full max-w-xl",
+  "w-full",
   "items-center justify-between",
   "rounded",
   "bg-card-background",

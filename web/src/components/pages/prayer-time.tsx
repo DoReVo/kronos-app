@@ -86,35 +86,30 @@ function PageContent() {
   };
 
   return (
-    <div className="flex justify-between flex-col gap-8">
-      <div>
-        <MethodToggle></MethodToggle>
-      </div>
-      {method === "auto" && (
-        <>
-          <div className="flex justify-center">
-            <Switch isSelected={useAdjustment} onChange={onChangeAdjustment}>
-              Use Jakim time
-            </Switch>
-          </div>
-          <div>
+    <div className="flex-[1_0_0] flex justify-between flex-col gap-8">
+      <MethodToggle />
+      <div className="flex flex-[1_0_0] flex-col gap-2">
+        {method === "auto" && (
+          <>
+            <div className="flex justify-center">
+              <Switch isSelected={useAdjustment} onChange={onChangeAdjustment}>
+                Use Jakim time
+              </Switch>
+            </div>
             <UserCoordinate />
-          </div>
-        </>
-      )}
+          </>
+        )}
 
-      {method === "manual" && (
-        <>
+        {method === "manual" && (
           <div className="mx-auto">
             <ZoneSelector />
           </div>
-        </>
-      )}
-
+        )}
+      </div>
       <div className="flex justify-center">
         <StatusBar />
       </div>
-      <div className="flex gap-4 flex-col items-center w-600px">
+      <div className="flex gap-4 flex-col items-center">
         <TimeCard name="imsak" time={data?.imsak ?? ""} />
         <TimeCard name="subuh" time={data?.subuh ?? ""} />
         <TimeCard name="syuruk" time={data?.syuruk ?? ""} />
