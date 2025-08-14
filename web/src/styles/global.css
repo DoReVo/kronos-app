@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+@theme {
+  --color-card-border: var(--color-violet-700);
+  --color-card-background-selected: var(--color-violet-200);
+  --color-card-background: var(--color-violet-50);
+  --color-card-background-dark: var(--color-violet-200);
+  --color-card-text: var(--color-violet-600);
+
+  --color-method-selector-background: var(--color-violet-50);
+  --color-method-selector-background-selected: var(--color-violet-200);
+}
+
+html {
+  overscroll-behavior: none;
+}

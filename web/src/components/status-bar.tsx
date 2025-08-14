@@ -7,7 +7,7 @@ export function StatusBar() {
   const locale = navigator.language;
 
   return (
-    <div className="text-white text-center">
+    <div className="text-center">
       <div>{formatted}</div>
       <div>{locale}</div>
     </div>

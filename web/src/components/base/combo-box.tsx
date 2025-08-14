@@ -19,6 +19,7 @@ import {
   Collection,
 } from "react-aria-components";
 import { ListBoxHeader, PopoverStyle } from "./style";
+import cs from "clsx";
 
 interface Props<T extends object> extends Omit<ComboBoxProps<T>, "children"> {
   label?: string;
@@ -39,7 +40,7 @@ export function ComboBox<T extends object>({
       <AriaLabel>{label}</AriaLabel>
       <div className="">
         <AriaInput
-          className="text-white p-2 border-b-4 border-canvas-light"
+          className="p-2 border text-card-text border-card-border outline-none rounded"
           placeholder="Choose a zone"
         />
         <AriaButton></AriaButton>
@@ -47,7 +48,9 @@ export function ComboBox<T extends object>({
       {description && <AriaText slot="description">{description}</AriaText>}
       <AriaFieldError>{errorMessage}</AriaFieldError>
       <AriaPopover className={PopoverStyle}>
-        <AriaListBox className="flex flex-col gap-2">{children}</AriaListBox>
+        <AriaListBox className="text-card-text flex flex-col gap-2">
+          {children}
+        </AriaListBox>
       </AriaPopover>
     </AriaComboBox>
   );
@@ -56,10 +59,16 @@ export function ComboBox<T extends object>({
 function Item(props: ListBoxItemProps) {
   return (
     <AriaListBoxItem
-      {...props}
-      className={({ isFocused, isSelected }) =>
-        `my-item ${isFocused ? "focused" : ""} ${isSelected ? "selected" : ""}`
+      className={({ isSelected, isHovered, isFocused }) =>
+        cs(
+          {
+            "bg-card-background": isSelected,
+            "bg-card-background-selected": isHovered || isFocused,
+          },
+          "px-2 py-1",
+        )
       }
+      {...props}
     />
   );
 }

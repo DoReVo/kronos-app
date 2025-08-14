@@ -5,8 +5,8 @@ const RootStyle = cs([
   "w-full",
   "items-center justify-between",
   "rounded",
-  "bg-card-background",
-  "text-text",
+  "border border-card-border",
+  "text-card-text",
   "p-4 text-2xl",
 ]);
 

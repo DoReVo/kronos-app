@@ -6,10 +6,10 @@ import { useEffect } from "react";
 import { useSetAtom } from "jotai";
 import { latlongAtom } from "../atoms";
 
-const RootStyle = cs(["text-white", "flex flex-col gap-2"]);
+const RootStyle = cs(["flex flex-col gap-2"]);
 
 const CoordinateStyle = cs([
-  "p-2 rounded bg-coordinate-background flex-1 max-w-200px text-center",
+  "p-2 rounded bg-card-background-dark  flex-1 max-w-200px text-center",
 ]);
 const CoordinateContainerStyle = cs(["flex gap-2 items-center justify-center"]);
 

@@ -3,18 +3,20 @@ import { useAtom } from "jotai";
 import { Label, Radio, RadioGroup } from "react-aria-components";
 import { methodAtom } from "../atoms";
 
-const RootStyle = cs(["text-white", "flex flex-row items-stretch gap-4"]);
+const RootStyle = cs(["flex flex-row items-stretch gap-4"]);
 
 const RadioStyle = cs([
   "flex flex-col gap-2",
   "p-4 rounded flex-1",
-  "bg-method-background",
-  "data-[selected]:bg-method-background-selected",
+  "border border-app-border",
+  "data-[selected]:bg-method-selector-background-selected",
+  "bg-method-selector-background",
+  "text-card-text",
 ]);
 
 const LabelStyle = cs(["text-sm"]);
 
-const RadioTitleStyle = cs(["text-white text-lg"]);
+const RadioTitleStyle = cs(["font-bold text-lg"]);
 
 export function MethodToggle() {
   const [method, setMethod] = useAtom(methodAtom);

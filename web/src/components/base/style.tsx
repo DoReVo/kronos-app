@@ -3,11 +3,10 @@ import cs from "clsx";
 export const FocusRingStyle = cs(["outline outline-blue-600 outline-offset-2"]);
 
 export const PopoverStyle = cs([
-  "uno-layer-base:(h-60 w-[var(--trigger-width)] overflow-auto)",
-  "uno-layer-base:(rounded-sm bg-canvas-light)",
-  "uno-layer-base:(ring-1 ring-black/5)",
-  "uno-layer-base:(text-base text-white)",
-  "uno-layer-base:(p-2)",
+  "h-60 w-[var(--trigger-width)] overflow-auto",
+  "text-base",
+  "bg-white",
+  "shadow",
 ]);
 
-export const ListBoxHeader = cs(["text-lg font-bold text-gray-500"]);
+export const ListBoxHeader = cs(["px-2 text-lg font-bold text-card-text"]);

@@ -1,16 +1,15 @@
 import { defineConfig } from "astro/config";
-import UnoCSS from "unocss/astro";
 import AstroPWA from "@vite-pwa/astro";
 
 import react from "@astrojs/react";
 
+import tailwindcss from "@tailwindcss/vite";
+
 // https://astro.build/config
 export default defineConfig({
   site: "https://kronos.izzatfaris.site",
+
   integrations: [
-    UnoCSS({
-      injectReset: true,
-    }),
     react(),
     AstroPWA({
       registerType: "autoUpdate",
@@ -21,4 +20,8 @@ export default defineConfig({
       },
     }),
   ],
+
+  vite: {
+    plugins: [tailwindcss()],
+  },
 });
