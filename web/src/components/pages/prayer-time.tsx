@@ -88,16 +88,16 @@ function PageContent() {
   return (
     <div className="flex-[1_0_0] flex justify-between flex-col gap-8">
       <MethodToggle />
-      <div className="flex flex-[1_0_0] flex-col gap-2">
+      <div id="selector" className="flex flex-col">
         {method === "auto" && (
-          <>
+          <div>
             <div className="flex justify-center">
               <Switch isSelected={useAdjustment} onChange={onChangeAdjustment}>
                 Use Jakim time
               </Switch>
             </div>
             <UserCoordinate />
-          </>
+          </div>
         )}
 
         {method === "manual" && (
