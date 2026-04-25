@@ -9,9 +9,15 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as PrayerTimeRouteImport } from './routes/prayer-time'
 import { Route as CurrencyRouteImport } from './routes/currency'
 import { Route as IndexRouteImport } from './routes/index'
 
+const PrayerTimeRoute = PrayerTimeRouteImport.update({
+  id: '/prayer-time',
+  path: '/prayer-time',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CurrencyRoute = CurrencyRouteImport.update({
   id: '/currency',
   path: '/currency',
@@ -26,31 +32,42 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/currency': typeof CurrencyRoute
+  '/prayer-time': typeof PrayerTimeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/currency': typeof CurrencyRoute
+  '/prayer-time': typeof PrayerTimeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/currency': typeof CurrencyRoute
+  '/prayer-time': typeof PrayerTimeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/currency'
+  fullPaths: '/' | '/currency' | '/prayer-time'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/currency'
-  id: '__root__' | '/' | '/currency'
+  to: '/' | '/currency' | '/prayer-time'
+  id: '__root__' | '/' | '/currency' | '/prayer-time'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CurrencyRoute: typeof CurrencyRoute
+  PrayerTimeRoute: typeof PrayerTimeRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/prayer-time': {
+      id: '/prayer-time'
+      path: '/prayer-time'
+      fullPath: '/prayer-time'
+      preLoaderRoute: typeof PrayerTimeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/currency': {
       id: '/currency'
       path: '/currency'
@@ -71,6 +88,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CurrencyRoute: CurrencyRoute,
+  PrayerTimeRoute: PrayerTimeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

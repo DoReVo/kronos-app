@@ -10,7 +10,6 @@ import {
   FieldError as AriaFieldError,
   Text as AriaText,
   Input as AriaInput,
-  Button as AriaButton,
   Popover as AriaPopover,
   ListBox as AriaListBox,
   ListBoxItem as AriaListBoxItem,
@@ -23,6 +22,7 @@ import cs from "clsx";
 
 interface Props<T extends object> extends Omit<ComboBoxProps<T>, "children"> {
   label?: string;
+  placeholder?: string;
   description?: string | null;
   errorMessage?: string | ((validation: ValidationResult) => string);
   children: React.ReactNode | ((item: T) => React.ReactNode);
@@ -30,27 +30,40 @@ interface Props<T extends object> extends Omit<ComboBoxProps<T>, "children"> {
 
 export function ComboBox<T extends object>({
   label,
+  placeholder = "Search…",
   description,
   errorMessage,
   children,
   ...props
 }: Props<T>) {
   return (
-    <AriaComboBox {...props} menuTrigger="focus">
-      <AriaLabel>{label}</AriaLabel>
-      <div className="">
+    <AriaComboBox {...props} menuTrigger="focus" className="flex flex-col gap-1">
+      {label !== undefined && <AriaLabel className="kicker">{label}</AriaLabel>}
+      <div className="relative">
         <AriaInput
-          className="p-2 border text-card-text border-card-border outline-none rounded"
-          placeholder="Choose a zone"
+          className={cs(
+            "w-full bg-transparent",
+            "px-0 py-2 pr-6",
+            "font-display text-lg text-ink placeholder:text-ink-mute placeholder:italic",
+            "border-0 border-b border-rule",
+            "outline-none focus:border-accent focus:border-b-2",
+            "transition-colors",
+          )}
+          placeholder={placeholder}
         />
-        <AriaButton></AriaButton>
+        <span
+          aria-hidden="true"
+          className="icon-[lucide--chevron-down] absolute right-1 top-1/2 -translate-y-1/2 text-sm text-ink-mute pointer-events-none"
+        />
       </div>
       {description !== null && description !== undefined && (
-        <AriaText slot="description">{description}</AriaText>
+        <AriaText slot="description" className="marginalia mt-1">
+          {description}
+        </AriaText>
       )}
-      <AriaFieldError>{errorMessage}</AriaFieldError>
+      <AriaFieldError className="marginalia text-accent mt-1">{errorMessage}</AriaFieldError>
       <AriaPopover className={PopoverStyle}>
-        <AriaListBox className="text-card-text flex flex-col gap-2">{children}</AriaListBox>
+        <AriaListBox className="text-ink outline-none">{children}</AriaListBox>
       </AriaPopover>
     </AriaComboBox>
   );
@@ -61,11 +74,13 @@ function Item(props: ListBoxItemProps) {
     <AriaListBoxItem
       className={({ isSelected, isHovered, isFocused }) =>
         cs(
+          "px-3 py-1.5 cursor-pointer outline-none",
+          "font-body text-sm text-ink",
+          "transition-colors",
           {
-            "bg-card-background": isSelected,
-            "bg-card-background-selected": isHovered || isFocused,
+            "bg-accent-soft": isSelected,
+            "bg-paper-deep": (isHovered || isFocused) && !isSelected,
           },
-          "px-2 py-1",
         )
       }
       {...props}
@@ -80,7 +95,7 @@ interface SectionProps<T extends object> extends ListBoxSectionProps<T> {
 function Section<T extends object>(props: SectionProps<T>) {
   const { children, title, items, ..._props } = props;
   return (
-    <ListBoxSection {..._props} className="flex flex-col gap-2">
+    <ListBoxSection {..._props} className="flex flex-col">
       <Header className={ListBoxHeader}>{title}</Header>
       {!!items && <Collection items={items}>{children}</Collection>}
     </ListBoxSection>

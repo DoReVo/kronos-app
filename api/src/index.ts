@@ -5,6 +5,7 @@ import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { CustomTimeProvider } from "./lib/time";
 import { JakimProvider } from "./lib/jakim";
+import { ExchangeRateProvider } from "./lib/exchange-rate";
 import { TimeNotFound, UpstreamParseError } from "./errors/errors";
 
 const server = new Hono();
@@ -82,5 +83,11 @@ server.get(
     return c.json(res);
   },
 );
+
+server.get("/currency/rates", async (c) => {
+  const provider = new ExchangeRateProvider();
+  const rates = await provider.getRates();
+  return c.json(rates);
+});
 
 export default server;

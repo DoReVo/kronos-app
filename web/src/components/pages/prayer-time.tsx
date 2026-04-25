@@ -1,61 +1,219 @@
 import { useAtomValue } from "jotai";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { DateTime } from "luxon";
+import type { PrayerTime } from "@kronos/common";
 import { methodAtom } from "../../atoms";
 import { MethodToggle } from "../method-toggle";
-import { StatusBar } from "../status-bar";
-import { TimeCard } from "../time-card";
 import { UserCoordinate } from "../user-coordinate";
-import QueryClientProvider from "../../query/query-provider";
-import { Switch } from "../base/Switch";
 import { ZoneSelector } from "../ZoneSelector";
+import { Switch } from "../base/Switch";
+import QueryClientProvider from "../../query/query-provider";
 import { useAutoPrayerTime, useManualPrayerTime } from "../../hooks/use-prayer-time";
+import { TimeCard } from "../time-card";
+import { Loading } from "../base/loading";
+import { FolioMark, PageItem, RunningHead } from "../page-frame";
+
+const HERO_TIME_STYLE = { fontSize: "clamp(5rem,17vw,9rem)" } as const;
+const EMPTY_ENTRIES: PrayerEntry[] = [];
+const FOLIO = "02";
+
+const PRAYER_KEYS = [
+  "imsak",
+  "subuh",
+  "syuruk",
+  "zohor",
+  "asar",
+  "maghrib",
+  "isyak",
+] as const satisfies readonly (keyof PrayerTime)[];
+
+type PrayerKey = (typeof PRAYER_KEYS)[number];
+
+interface PrayerEntry {
+  key: PrayerKey;
+  iso: string;
+  display: string;
+  isPast: boolean;
+  isNext: boolean;
+}
+
+function useTick() {
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      setTick((t) => t + 1);
+    }, 30_000);
+    return () => {
+      window.clearInterval(id);
+    };
+  }, []);
+}
+
+function buildEntries(data: PrayerTime, now: DateTime): PrayerEntry[] {
+  const parsed = PRAYER_KEYS.map((key) => {
+    const iso = data[key];
+    const dt = DateTime.fromISO(iso);
+    return {
+      key,
+      iso,
+      dt,
+      display: dt.toLocaleString(DateTime.TIME_SIMPLE),
+      isPast: dt < now,
+    };
+  });
+
+  const nextIdx = parsed.findIndex((p) => !p.isPast);
+
+  return parsed.map((p, i) => ({
+    key: p.key,
+    iso: p.iso,
+    display: p.display,
+    isPast: p.isPast,
+    isNext: i === nextIdx,
+  }));
+}
+
+function formatCountdown(target: DateTime, now: DateTime): string {
+  const diff = target.diff(now, ["hours", "minutes"]).toObject();
+  const hours = Math.floor(diff.hours ?? 0);
+  const minutes = Math.floor(diff.minutes ?? 0);
+  if (hours === 0 && minutes === 0) return "any moment now";
+  if (hours === 0) return `in ${minutes} min`;
+  if (minutes === 0) return `in ${hours} h`;
+  return `in ${hours} h ${minutes} min`;
+}
+
+interface HeroProps {
+  entry: PrayerEntry;
+  now: DateTime;
+}
+
+function Hero({ entry, now }: HeroProps) {
+  const target = DateTime.fromISO(entry.iso);
+  const countdown = formatCountdown(target, now);
+  return (
+    <div className="flex flex-col items-center text-center py-6 sm:py-10">
+      <div className="kicker text-accent mb-3">Up next</div>
+      <div className="font-display italic text-3xl sm:text-4xl text-ink mb-4 capitalize">
+        {entry.key}
+      </div>
+      <div
+        className="font-display italic text-ink tabular leading-[0.95] tracking-tight"
+        style={HERO_TIME_STYLE}
+      >
+        {entry.display}
+      </div>
+      <div className="font-display italic text-base text-ink-quiet mt-4">{countdown}</div>
+    </div>
+  );
+}
+
+interface ListProps {
+  entries: PrayerEntry[];
+}
+
+function PrayerList({ entries }: ListProps) {
+  return (
+    <div className="flex flex-col">
+      <div className="kicker text-ink-mute pb-2">The day&rsquo;s observances</div>
+      {entries.map((e) => (
+        <TimeCard key={e.key} name={e.key} time={e.display} isPast={e.isPast} />
+      ))}
+      <div className="border-t border-rule-soft" />
+    </div>
+  );
+}
 
 function PageContent() {
   const method = useAtomValue(methodAtom);
   const [useAdjustment, setUseAdjustment] = useState(false);
+  useTick();
 
-  const { data: autoZoneData } = useAutoPrayerTime(useAdjustment);
-  const { data: manualZoneData } = useManualPrayerTime();
+  const { data: autoData, isLoading: autoLoading } = useAutoPrayerTime(useAdjustment);
+  const { data: manualData, isLoading: manualLoading } = useManualPrayerTime();
 
-  const data = method === "auto" ? autoZoneData : manualZoneData;
+  const data = method === "auto" ? autoData : manualData;
+  const isLoading = method === "auto" ? autoLoading : manualLoading;
 
-  const onChangeAdjustment = (value: boolean) => {
-    setUseAdjustment(value);
-  };
+  const now = DateTime.now();
+  const entries = useMemo(() => (data === undefined ? null : buildEntries(data, now)), [data, now]);
+  const hero = entries?.find((e) => e.isNext) ?? null;
+  const others = useMemo(
+    () => (entries === null ? EMPTY_ENTRIES : entries.filter((e) => !e.isNext)),
+    [entries],
+  );
+
+  const today = now.toLocaleString({
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
 
   return (
-    <div className="flex-[1_0_0] flex justify-between flex-col gap-8">
-      <MethodToggle />
-      <div id="selector" className="flex flex-col">
+    <div className="mx-auto w-full max-w-2xl flex flex-col gap-8">
+      <RunningHead section="Prayer Time" folio={FOLIO} />
+
+      <PageItem className="text-center">
+        <div className="kicker text-ink-mute">Daily Observance</div>
+        <div className="font-display italic text-base text-ink-quiet mt-2">{today}</div>
+      </PageItem>
+
+      <PageItem className="flex flex-col items-center gap-6">
+        <MethodToggle />
         {method === "auto" && (
-          <div>
-            <div className="flex justify-center">
-              <Switch isSelected={useAdjustment} onChange={onChangeAdjustment}>
-                Use Jakim time
-              </Switch>
-            </div>
+          <div className="flex flex-col items-center gap-4 mt-2">
             <UserCoordinate />
+            <Switch
+              isSelected={useAdjustment}
+              onChange={setUseAdjustment}
+              offLabel="astronomical"
+              onLabel="jakim"
+            >
+              Adjustments
+            </Switch>
           </div>
         )}
-
         {method === "manual" && (
-          <div className="mx-auto">
+          <div className="w-full max-w-sm mt-2">
             <ZoneSelector />
           </div>
         )}
-      </div>
-      <div className="flex justify-center">
-        <StatusBar />
-      </div>
-      <div className="flex gap-4 flex-col items-center">
-        <TimeCard name="imsak" time={data?.imsak ?? ""} />
-        <TimeCard name="subuh" time={data?.subuh ?? ""} />
-        <TimeCard name="syuruk" time={data?.syuruk ?? ""} />
-        <TimeCard name="zohor" time={data?.zohor ?? ""} />
-        <TimeCard name="asar" time={data?.asar ?? ""} />
-        <TimeCard name="maghrib" time={data?.maghrib ?? ""} />
-        <TimeCard name="isyak" time={data?.isyak ?? ""} />
-      </div>
+      </PageItem>
+
+      <PageItem>
+        <div className="flex items-center gap-5 text-ink-mute mt-2" aria-hidden="true">
+          <span className="flex-1 border-t border-rule" />
+          <span className="icon-[lucide--asterisk] text-lg" />
+          <span className="flex-1 border-t border-rule" />
+        </div>
+      </PageItem>
+
+      {isLoading && (
+        <PageItem className="flex justify-center pt-8">
+          <Loading>fetching times</Loading>
+        </PageItem>
+      )}
+
+      {hero !== null && (
+        <PageItem>
+          <Hero entry={hero} now={now} />
+        </PageItem>
+      )}
+
+      {hero === null && data !== undefined && entries !== null && (
+        <PageItem className="text-center font-display italic text-lg text-ink-quiet py-6">
+          The day&rsquo;s observances are complete.
+        </PageItem>
+      )}
+
+      {entries !== null && others.length > 0 && (
+        <PageItem>
+          <PrayerList entries={others} />
+        </PageItem>
+      )}
+
+      <FolioMark folio={FOLIO} />
     </div>
   );
 }

@@ -1,15 +1,10 @@
 import { useGeolocation } from "@uidotdev/usehooks";
-
-import cs from "clsx";
-import { Spinner } from "./base/spinner";
 import { useEffect } from "react";
 import { useSetAtom } from "jotai";
 import { latlongAtom } from "../atoms";
+import { Loading } from "./base/loading";
 
-const RootStyle = cs(["flex flex-col gap-2"]);
-
-const CoordinateStyle = cs(["p-2 rounded bg-card-background-dark  flex-1 max-w-200px text-center"]);
-const CoordinateContainerStyle = cs(["flex gap-2 items-center justify-center"]);
+const fmt = (n: number): string => n.toFixed(4);
 
 export function UserCoordinate() {
   const { loading, latitude, longitude, error } = useGeolocation({
@@ -18,14 +13,14 @@ export function UserCoordinate() {
     timeout: Infinity,
   });
 
-  let errorMessage = null;
+  let errorMessage: string | null = null;
 
   if (error?.code === GeolocationPositionError.PERMISSION_DENIED) {
-    errorMessage = "You have denied the request to share your location.";
+    errorMessage = "Location access denied.";
   } else if (error?.code === GeolocationPositionError.POSITION_UNAVAILABLE) {
-    errorMessage = "Your location is unavailable.";
+    errorMessage = "Location unavailable.";
   } else if (error?.code === GeolocationPositionError.TIMEOUT) {
-    errorMessage = "The request to get your location timed out.";
+    errorMessage = "Location request timed out.";
   } else if (error?.message !== undefined && error.message !== "") {
     errorMessage = error.message;
   }
@@ -39,24 +34,21 @@ export function UserCoordinate() {
   }, [latitude, longitude, setLatLong]);
 
   return (
-    <div className={RootStyle}>
-      <div className="text-md text-center">Your Location</div>
+    <div className="flex flex-col gap-2 items-center">
+      <div className="kicker">your coordinate</div>
 
-      {loading && (
-        <div className="flex items-center justify-center">
-          <Spinner className="text-3xl" />
-        </div>
-      )}
+      {loading && <Loading>fixing position</Loading>}
 
       {hasLocation && (
-        <div className={CoordinateContainerStyle}>
-          <div className={CoordinateStyle}>{latitude}</div>
-          <div className={CoordinateStyle}>{longitude}</div>
+        <div className="flex items-baseline gap-3 font-mono text-sm tabular text-ink-quiet">
+          <span>{fmt(latitude)}°</span>
+          <span className="text-ink-faint">·</span>
+          <span>{fmt(longitude)}°</span>
         </div>
       )}
 
       {errorMessage !== null && (
-        <div className="flex items-center justify-center text-red-400">{errorMessage}</div>
+        <div className="font-display italic text-sm text-accent">{errorMessage}</div>
       )}
     </div>
   );
