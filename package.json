@@ -14,7 +14,8 @@
     "test": "turbo run test",
     "typecheck": "turbo run typecheck",
     "start:server": "npm run dev -w api",
-    "start:web": "npm run dev -w web"
+    "start:web": "npm run dev -w web",
+    "prepare": "lefthook install"
   },
   "keywords": [],
   "author": "",
@@ -30,6 +31,7 @@
   },
   "devDependencies": {
     "@typescript/native-preview": "^7.0.0-dev.20260425.1",
+    "lefthook": "^1.13.6",
     "oxfmt": "^0.46.0",
     "oxlint": "^1.61.0",
     "oxlint-tsgolint": "^0.22.0",

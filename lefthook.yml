@@ -1,0 +1,23 @@
+pre-commit:
+  parallel: true
+  jobs:
+    - name: oxfmt
+      glob: "*.{ts,tsx,js,jsx,mjs,cjs}"
+      exclude:
+        - "web/src/routeTree.gen.ts"
+        - "api/worker-configuration.d.ts"
+      run: npx oxfmt {staged_files}
+      stage_fixed: true
+
+    - name: oxlint
+      glob: "*.{ts,tsx,js,jsx,mjs,cjs}"
+      exclude:
+        - "web/src/routeTree.gen.ts"
+        - "api/worker-configuration.d.ts"
+      run: npx oxlint --fix --deny-warnings {staged_files}
+      stage_fixed: true
+
+pre-push:
+  jobs:
+    - name: turbo
+      run: npx turbo run typecheck test lint
