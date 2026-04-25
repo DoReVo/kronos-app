@@ -7,7 +7,7 @@
     "start": "vite",
     "build": "tsgo && vite build",
     "preview": "vite preview",
-    "lint": "oxlint --type-aware .",
+    "lint": "oxlint --type-aware --deny-warnings .",
     "format": "oxfmt . '!src/routeTree.gen.ts'",
     "format:check": "oxfmt --check . '!src/routeTree.gen.ts'"
   },

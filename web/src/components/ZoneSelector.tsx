@@ -18,13 +18,13 @@ export function ZoneSelector() {
 
   const [zone, setZoneAtom] = useAtom(zoneAtom);
 
-  const onChangeHandler = (key: Key | null) => {
-    const validZone = ZoneSchema.parse(key);
+  const onChangeHandler = (value: Key | null) => {
+    const validZone = ZoneSchema.parse(value);
     void setZoneAtom(validZone);
   };
 
   return (
-    <ComboBox selectedKey={zone} onSelectionChange={onChangeHandler}>
+    <ComboBox value={zone} onChange={onChangeHandler}>
       {zones.map((entry) => (
         <ComboBox.Section key={entry.title} title={entry.title} items={entry.items}>
           {(item) => {

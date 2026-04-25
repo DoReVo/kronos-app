@@ -6,7 +6,7 @@
     "deploy": "wrangler deploy --minify src/index.ts",
     "typecheck": "tsgo",
     "test": "vitest",
-    "lint": "oxlint --type-aware .",
+    "lint": "oxlint --type-aware --deny-warnings .",
     "format": "oxfmt . '!worker-configuration.d.ts'",
     "format:check": "oxfmt --check . '!worker-configuration.d.ts'"
   },
