@@ -1,0 +1,17 @@
+name = "kronos-api"
+compatibility_date = "2025-01-01"
+
+[[routes]]
+pattern = "kronos-api.izzatfaris.site"
+custom_domain = true
+
+[dev]
+ip = "0.0.0.0"
+port = 4305
+
+[observability.logs]
+enabled = true
+
+[[kv_namespaces]]
+binding = "kronos"
+id = "3a29917d96cb494ba2620195b32d447e"

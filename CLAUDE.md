@@ -25,7 +25,7 @@ When you change anything in `common/src/`, either run `npm -w @kronos/common run
 
 ## First-time setup
 
-- `api/wrangler.toml` is gitignored. Copy `api/wrangler.example.toml` to `api/wrangler.toml` and fill in a real KV namespace `id` for the `kronos` binding. Without this file, `wrangler dev` and the api vitest pool both fail.
+- `api/wrangler.toml` is committed (KV namespace IDs are public identifiers, not secrets). The `id` for the `kronos` binding must point at a real KV namespace for production deploys; vitest-pool-workers mocks the binding locally and in CI, so a placeholder id is tolerated for tests.
 - `web/.env` needs `VITE_API_URL` (see `web/.env.example`); defaults to `http://localhost:4305`, the wrangler dev port. The web dev server itself runs on Vite's default `5173`.
 - `api/bruno-collection/` has saved requests for the worker endpoints; open it in [Bruno](https://www.usebruno.com/) to hit `/time/auto` and `/time/manual` against the local wrangler dev server.
 
