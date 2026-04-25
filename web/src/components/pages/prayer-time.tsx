@@ -29,9 +29,9 @@ function PageContent() {
     retryDelay: 500,
     refetchInterval: 30000,
     enabled: latLong[0] !== null && latLong[1] !== null && method === "auto",
-    select(data) {
+    select(data: PrayerTime) {
       return Object.fromEntries(
-        Object.entries(data).map(([key, value]) => [
+        (Object.entries(data) as [string, string][]).map(([key, value]) => [
           key,
           DateTime.fromISO(value).toLocaleString(DateTime.TIME_SIMPLE),
         ]),
@@ -59,9 +59,9 @@ function PageContent() {
     retryDelay: 500,
     refetchInterval: 30000,
     enabled: zone !== null && method === "manual",
-    select(data) {
+    select(data: PrayerTime) {
       return Object.fromEntries(
-        Object.entries(data).map(([key, value]) => [
+        (Object.entries(data) as [string, string][]).map(([key, value]) => [
           key,
           DateTime.fromISO(value).toLocaleString(DateTime.TIME_SIMPLE),
         ]),

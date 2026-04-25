@@ -12,10 +12,10 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@tsconfig/node18": "^18.2.4",
-    "del-cli": "^6.0.0",
-    "eslint": "^9.21.0",
+    "@tsconfig/node24": "^24.0.4",
+    "del-cli": "^7.0.0",
+    "eslint": "^10.2.1",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.2"
+    "typescript": "^5.9.3"
   }
 }

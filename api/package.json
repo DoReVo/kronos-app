@@ -7,17 +7,16 @@
     "test": "vitest"
   },
   "dependencies": {
-    "@hono/zod-validator": "^0.5.0",
+    "@hono/zod-validator": "^0.7.6",
     "@kronos/common": "^1.0.0",
-    "@types/luxon": "^3.6.2",
-    "hono": "^4.7.9",
-    "joi": "^17.13.3",
-    "luxon": "^3.6.1",
-    "zod": "^3.24.4"
+    "@types/luxon": "^3.7.1",
+    "hono": "^4.12.15",
+    "luxon": "^3.7.2",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@cloudflare/vitest-pool-workers": "^0.8.27",
-    "typescript": "^5.8.3",
-    "wrangler": "^4.14.4"
+    "@cloudflare/vitest-pool-workers": "^0.15.0",
+    "typescript": "^5.9.3",
+    "wrangler": "^4.85.0"
   }
 }

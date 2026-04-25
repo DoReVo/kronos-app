@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <title>Waktu Solat</title>
+    <meta name="title" content="Waktu Solat" />
+    <meta name="description" content="Waktu Solat Application" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Waktu Solat" />
+    <meta property="og:description" content="Waktu Solat Application" />
+
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:title" content="Waktu Solat" />
+    <meta property="twitter:description" content="Waktu Solat Application" />
+
+    <link
+      rel="apple-touch-icon"
+      sizes="120x120"
+      href="/pwa-stuff/apple-touch-icon.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="/pwa-stuff/favicon-32x32.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="/pwa-stuff/favicon-16x16.png"
+    />
+    <link
+      rel="mask-icon"
+      href="/pwa-stuff/safari-pinned-tab.svg"
+      color="#5bbad5"
+    />
+    <link rel="shortcut icon" href="/pwa-stuff/favicon.ico" />
+    <meta name="msapplication-TileColor" content="#da532c" />
+    <meta name="msapplication-config" content="/pwa-stuff/browserconfig.xml" />
+
+    <script type="module">
+      const isDarkMode = localStorage.getItem("darkMode") === "true";
+      if (isDarkMode) document.body.classList.add("dark");
+
+      window.addEventListener("dark-mode-changed", (event) => {
+        if (event.detail.isDarkMode) document.body.classList.add("dark");
+        else document.body.classList.remove("dark");
+      });
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

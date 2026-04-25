@@ -39,7 +39,7 @@ server.get(
     "query",
     z
       .object({
-        date: z.string().datetime({ offset: true }),
+        date: z.iso.datetime({ offset: true }),
         latitude: z.string(),
         longitude: z.string(),
         useJakimAdjustments: z.coerce.boolean(),
@@ -68,7 +68,7 @@ server.get(
     "query",
     z
       .object({
-        date: z.string().datetime({ offset: true }),
+        date: z.iso.datetime({ offset: true }),
         zone: ZoneSchema,
       })
       .required(),

@@ -2,6 +2,6 @@ import kyFactory from "ky";
 
 export function createKy() {
   return kyFactory.create({
-    prefixUrl: import.meta.env.PUBLIC_API_URL,
+    prefix: import.meta.env.VITE_API_URL,
   });
 }

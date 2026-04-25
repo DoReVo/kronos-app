@@ -1,9 +1,9 @@
 name = "kronos-api"
 compatibility_date = "2025-01-01"
 
-routes = {
-  {pattern = "kronos-api.izzatfaris.site"}
-}
+[[routes]]
+pattern = "kronos-api.izzatfaris.site"
+custom_domain = true
 
 [dev]
 ip = "0.0.0.0"

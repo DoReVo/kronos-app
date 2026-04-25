@@ -1,10 +1,10 @@
 {
-  "extends": "@tsconfig/node18/tsconfig.json",
+  "extends": "@tsconfig/node24/tsconfig.json",
   "compilerOptions": {
     "sourceMap": true,
     "outDir": "dist",
     "removeComments": true,
-    "importsNotUsedAsValues": "remove",
+    "verbatimModuleSyntax": true,
     "allowSyntheticDefaultImports": true,
     "declaration": true
   },

@@ -8,15 +8,15 @@ npm workspaces monorepo orchestrated by Turbo. Three packages:
 
 - `common/` — `@kronos/common`: shared zod schemas (`PrayerTimeSchema`, `ZoneSchema`), `ZONE_OPTIONS` (Malaysian JAKIM prayer-time zones), and Luxon helpers. Compiled to `dist/` via `tsc`; both `api` and `web` import the built output, so `common` must be built before the others can typecheck or run.
 - `api/` — `@kronos/api`: Cloudflare Worker (Hono) serving prayer times. Uses a KV namespace (binding name `kronos`) to cache JAKIM yearly data per zone.
-- `web/` — `@kronos/web`: Astro 5 + React 19 PWA. Single page renders `PrayerTimePage` client-only; user preferences persist to IndexedDB.
+- `web/` — `@kronos/web`: Vite + React 19 PWA, routed by TanStack Router (file-based). User preferences persist to IndexedDB.
 
 ## Commands
 
 Run from the repo root unless noted:
 
-- `npm run dev` — builds `@kronos/common` once, then `turbo run dev` brings up `api` (wrangler) and `web` (astro) in parallel. Use this as the default.
+- `npm run dev` — builds `@kronos/common` once, then `turbo run dev` brings up `api` (wrangler) and `web` (vite) in parallel. Use this as the default.
 - `npm run start:server` / `npm run start:web` — run only one workspace's dev server.
-- `npm run build` — `turbo run build` (respects `^build` so `common` builds first). The `web` build runs `astro check && astro build`, so stale `common/dist/` types surface here as type errors.
+- `npm run build` — `turbo run build` (respects `^build` so `common` builds first). The `web` build runs `tsc && vite build`, so stale `common/dist/` types surface here as type errors.
 - `npm run test` — runs `vitest` across workspaces. To run a single test file in `api/`: `npm test -w api -- src/lib/jakim.test.ts`. The api package uses `@cloudflare/vitest-pool-workers`, which **requires `api/wrangler.toml` to exist** (see setup below).
 - `npm run lint` — `turbo run lint` (no workspace currently defines a lint script).
 - `npm run deploy -w api` — deploy the Worker via `wrangler deploy --minify`.
@@ -26,7 +26,7 @@ When you change anything in `common/src/`, either run `npm -w @kronos/common run
 ## First-time setup
 
 - `api/wrangler.toml` is gitignored. Copy `api/wrangler.example.toml` to `api/wrangler.toml` and fill in a real KV namespace `id` for the `kronos` binding. Without this file, `wrangler dev` and the api vitest pool both fail.
-- `web/.env` needs `PUBLIC_API_URL` (see `web/.env.example`); defaults to `http://localhost:4305`, which matches the wrangler dev port.
+- `web/.env` needs `VITE_API_URL` (see `web/.env.example`); defaults to `http://localhost:4305`, the wrangler dev port. The web dev server itself runs on Vite's default `5173`.
 - `api/bruno-collection/` has saved requests for the worker endpoints; open it in [Bruno](https://www.usebruno.com/) to hit `/time/auto` and `/time/manual` against the local wrangler dev server.
 
 ## Architecture notes
@@ -45,8 +45,8 @@ All times the api returns are ISO strings in UTC; the web converts to local disp
 
 - `src/atoms.ts` — jotai atoms (`methodAtom`, `latlongAtom`, `zoneAtom`) stored via `atomWithStorage` backed by `idb-keyval` (IndexedDB), so user preferences survive reloads and work offline-first alongside the PWA.
 - `components/pages/prayer-time.tsx` is the only meaningful page. It runs two TanStack Query hooks (one for `auto`, one for `manual`); `enabled` flags gate which one fires based on `methodAtom`. `refetchInterval: 30000` polls every 30 s so times stay fresh without a route change.
-- `api/ky.ts` exports a `createKy()` factory that returns a `ky` instance with `prefixUrl: import.meta.env.PUBLIC_API_URL`; pages call it once at module scope.
-- Astro is configured with `@astrojs/react` and `@vite-pwa/astro` (autoUpdate). Tailwind v4 is wired through `@tailwindcss/vite` — there is no `tailwind.config.*`; configure via `src/styles/global.css`. UI primitives use `react-aria-components`.
+- `api/ky.ts` exports a `createKy()` factory that returns a `ky` instance with `prefix: import.meta.env.VITE_API_URL`; pages call it once at module scope.
+- Vite is configured with `@vitejs/plugin-react`, `vite-plugin-pwa` (autoUpdate), and `@tanstack/router-plugin/vite` — the router plugin must come *before* `@vitejs/plugin-react` in the plugins array. Tailwind v4 is wired through `@tailwindcss/vite`; there is no `tailwind.config.*`, configure via `src/styles/global.css`. UI primitives use `react-aria-components`. File-based routes live under `src/routes/`; the plugin writes `src/routeTree.gen.ts`, which is committed. If that file goes missing or is out of sync, `tsc` in `npm run build` fails before `vite` can regenerate it — bootstrap by running `npx vite build` (or `npm run dev`) inside `web/`, then commit.
 
 ### Shared package conventions
 

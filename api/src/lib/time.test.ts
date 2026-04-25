@@ -2,7 +2,6 @@ import { assert, describe, expect, test } from "vitest";
 import { AladhanPrayerTimeProvider, CustomTimeProvider } from "./time";
 import * as RawCustom from "./custom.ts";
 import { DateTime } from "luxon";
-import { custom } from "joi";
 
 describe("AladhanPrayerTimeProvider()", () => {
   test("Fetch a time from the server", async () => {
