@@ -18,10 +18,7 @@ npm workspaces + Turbo. Three packages:
 
 ## Footguns
 
-- **NixOS TLS**: workerd outbound fetches fail without `SSL_CERT_FILE`. Repo-root `.envrc` exports it; first-time setup is `direnv allow`.
 - **JAKIM date off-by-one**: pass KL-offset ISO (`...+08:00`) for `/time/manual`, not UTC midnight — JAKIM dates parsed in Asia/KL then converted to UTC start-of-day land on the previous calendar day.
-- **Zod boolean coercion**: `z.coerce.boolean()` treats any non-empty string as `true` (including `"false"`). Use `z.enum(["true","false"]).transform(v => v === "true")`.
-- **Stale common types**: rebuild `common` (or run its dev watch) after editing `common/src/`, otherwise `api`/`web` see old types.
 
 ## Web design philosophy
 
