@@ -1,6 +1,9 @@
 {
   "tasks": {
     "test": {},
+    "typecheck": {
+      "dependsOn": ["^build"]
+    },
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**"]

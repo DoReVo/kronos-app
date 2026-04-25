@@ -98,7 +98,7 @@ describe("API server", async () => {
 
 describe("Sandbox", async () => {
   test("Hehe", async () => {
-    const myFunc = (val) => (String(val), Number());
+    const myFunc = (val: unknown) => (String(val), Number());
 
     const x = myFunc(3);
 

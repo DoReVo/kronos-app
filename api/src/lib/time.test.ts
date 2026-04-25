@@ -1,10 +1,10 @@
 import { assert, describe, expect, test } from "vitest";
 import { AladhanPrayerTimeProvider, CustomTimeProvider } from "./time";
-import * as RawCustom from "./custom.ts";
+import * as RawCustom from "./custom.js";
 import { DateTime } from "luxon";
 
 describe("AladhanPrayerTimeProvider()", () => {
-  test("Fetch a time from the server", async () => {
+  test.skip("Fetch a time from the server", async () => {
     const s = new AladhanPrayerTimeProvider();
 
     const res = await s.getTimeForDay(

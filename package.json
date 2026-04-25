@@ -10,6 +10,7 @@
     "dev": "turbo run build --filter=@kronos/common --no-daemon && turbo run dev",
     "lint": "turbo run lint",
     "test": "turbo run test",
+    "typecheck": "turbo run typecheck",
     "start:server": "npm run dev -w api",
     "start:web": "npm run dev -w web"
   },
