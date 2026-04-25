@@ -1,9 +1,6 @@
 import React from "react";
 import cs from "clsx";
-import {
-  Switch as AriaSwitch,
-  type SwitchProps as AriaSwitchProps,
-} from "react-aria-components";
+import { Switch as AriaSwitch, type SwitchProps as AriaSwitchProps } from "react-aria-components";
 
 export interface SwitchProps extends Omit<AriaSwitchProps, "children"> {
   children: React.ReactNode;
@@ -35,16 +32,8 @@ export function Switch({ children, ...props }: SwitchProps) {
       {({ isSelected, isDisabled }) => (
         <>
           {children}
-          <div
-            className={TrackStyle}
-            data-selected={isSelected}
-            data-disabled={isDisabled}
-          >
-            <span
-              className={HandleStyle}
-              data-selected={isSelected}
-              data-disabled={isDisabled}
-            />
+          <div className={TrackStyle} data-selected={isSelected} data-disabled={isDisabled}>
+            <span className={HandleStyle} data-selected={isSelected} data-disabled={isDisabled} />
           </div>
         </>
       )}

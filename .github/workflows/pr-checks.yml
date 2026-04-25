@@ -1,4 +1,4 @@
-name: ci
+name: PR Checks
 
 on:
   pull_request:
@@ -10,7 +10,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  check:
+  pr-check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -20,5 +20,7 @@ jobs:
           cache: "npm"
       - run: npm ci
       - run: npm run build
+      - run: npm run typecheck
       - run: npm run test
       - run: npm run lint
+      - run: npm run format:check

@@ -8,9 +8,7 @@ import { latlongAtom } from "../atoms";
 
 const RootStyle = cs(["flex flex-col gap-2"]);
 
-const CoordinateStyle = cs([
-  "p-2 rounded bg-card-background-dark  flex-1 max-w-200px text-center",
-]);
+const CoordinateStyle = cs(["p-2 rounded bg-card-background-dark  flex-1 max-w-200px text-center"]);
 const CoordinateContainerStyle = cs(["flex gap-2 items-center justify-center"]);
 
 export function UserCoordinate() {
@@ -28,8 +26,8 @@ export function UserCoordinate() {
     errorMessage = "Your location is unavailable.";
   } else if (error?.code === GeolocationPositionError.TIMEOUT) {
     errorMessage = "The request to get your location timed out.";
-  } else if (error?.message) {
-    errorMessage = error?.message;
+  } else if (error?.message !== undefined && error.message !== "") {
+    errorMessage = error.message;
   }
 
   const hasLocation = latitude !== null && longitude !== null;
@@ -37,8 +35,8 @@ export function UserCoordinate() {
   const setLatLong = useSetAtom(latlongAtom);
 
   useEffect(() => {
-    setLatLong([latitude, longitude]);
-  }, [latitude, longitude]);
+    void setLatLong([latitude, longitude]);
+  }, [latitude, longitude, setLatLong]);
 
   return (
     <div className={RootStyle}>
@@ -51,18 +49,14 @@ export function UserCoordinate() {
       )}
 
       {hasLocation && (
-        <>
-          <div className={CoordinateContainerStyle}>
-            <div className={CoordinateStyle}>{latitude}</div>
-            <div className={CoordinateStyle}>{longitude}</div>
-          </div>
-        </>
+        <div className={CoordinateContainerStyle}>
+          <div className={CoordinateStyle}>{latitude}</div>
+          <div className={CoordinateStyle}>{longitude}</div>
+        </div>
       )}
 
-      {errorMessage && (
-        <div className="flex items-center justify-center text-red-400">
-          {errorMessage}
-        </div>
+      {errorMessage !== null && (
+        <div className="flex items-center justify-center text-red-400">{errorMessage}</div>
       )}
     </div>
   );

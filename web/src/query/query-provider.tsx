@@ -6,10 +6,8 @@ import { type PropsWithChildren } from "react";
 
 const queryClient = new QueryClient();
 
-export default function QueryClientProvider(props: PropsWithChildren<{}>) {
+export default function QueryClientProvider(props: PropsWithChildren) {
   return (
-    <InternalQueryClientProvider client={queryClient}>
-      {props.children}
-    </InternalQueryClientProvider>
+    <InternalQueryClientProvider client={queryClient}>{props.children}</InternalQueryClientProvider>
   );
 }

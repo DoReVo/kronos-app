@@ -17,10 +17,10 @@ if (import.meta.env.PROD) {
   s.async = true;
   s.src = "https://zapdos.izzatfaris.site/script.js";
   s.dataset.websiteId = "e6154266-985b-4f15-af73-c141cc61f034";
-  document.head.appendChild(s);
+  document.head.append(s);
 }
 
-createRoot(document.getElementById("root")!).render(
+createRoot(document.querySelector("#root")!).render(
   <StrictMode>
     <RouterProvider router={router} />
   </StrictMode>,

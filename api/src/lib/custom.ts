@@ -1,12 +1,19 @@
+// Reference implementation kept as the parity oracle for `CustomTimeProvider`
+// in `time.ts`. `time.test.ts` asserts both produce identical output for the
+// shared internals (toRadians, toDegrees, gregorianToJulian). Intentionally
+// untyped JS-style — `@ts-nocheck` here, and the file is added to oxlint's
+// `ignorePatterns` so it doesn't drown the report in no-unsafe-* warnings.
+// If you change anything here, also change `time.ts` to keep the parity test green.
+// oxlint-disable-next-line typescript/ban-ts-comment -- intentional, see above
 // @ts-nocheck
 // JAKIM prayer time parameters
 const PRAYER_PARAMS = {
-  fajr: 20, // Fajr angle
-  isha: 18, // Isha angle
-  imsak: 20, // Imsak angle
-  dhuha: 4.5, // Dhuha angle
-  asrFactor: 1, // Asr shadow factor (1 for Shafi'i)
-  imsakOffset: -10, // Imsak is 10 minutes before Fajr
+  fajr: 20,
+  isha: 18,
+  imsak: 20,
+  dhuha: 4.5,
+  asrFactor: 1,
+  imsakOffset: -10,
 };
 
 // JAKIM adjustments in minutes
@@ -45,11 +52,7 @@ export function gregorianToJulian(date) {
   const a = Math.floor(year / 100);
   const b = 2 - a + Math.floor(a / 4);
   const jd =
-    Math.floor(365.25 * (year + 4716)) +
-    Math.floor(30.6001 * (month + 1)) +
-    day +
-    b -
-    1524.5;
+    Math.floor(365.25 * (year + 4716)) + Math.floor(30.6001 * (month + 1)) + day + b - 1524.5;
 
   return jd;
 }
@@ -59,8 +62,7 @@ function getSunDeclination(jd) {
   const d = jd - 2451545.0;
   const g = 357.529 + 0.98560028 * d;
   const q = 280.459 + 0.98564736 * d;
-  const l =
-    q + 1.915 * Math.sin(toRadians(g)) + 0.02 * Math.sin(toRadians(2 * g));
+  const l = q + 1.915 * Math.sin(toRadians(g)) + 0.02 * Math.sin(toRadians(2 * g));
 
   const e = 23.439 - 0.00000036 * d;
   const delta = Math.asin(Math.sin(toRadians(e)) * Math.sin(toRadians(l)));
@@ -73,15 +75,11 @@ function getEquationOfTime(jd) {
   const d = jd - 2451545.0;
   const g = 357.529 + 0.98560028 * d;
   const q = 280.459 + 0.98564736 * d;
-  const l =
-    q + 1.915 * Math.sin(toRadians(g)) + 0.02 * Math.sin(toRadians(2 * g));
+  const l = q + 1.915 * Math.sin(toRadians(g)) + 0.02 * Math.sin(toRadians(2 * g));
 
   const e = 23.439 - 0.00000036 * d;
   const ra = toDegrees(
-    Math.atan2(
-      Math.cos(toRadians(e)) * Math.sin(toRadians(l)),
-      Math.cos(toRadians(l)),
-    ),
+    Math.atan2(Math.cos(toRadians(e)) * Math.sin(toRadians(l)), Math.cos(toRadians(l))),
   );
 
   return (q - ra) / 15;
@@ -89,20 +87,11 @@ function getEquationOfTime(jd) {
 
 // Calculate time based on angle
 function getTimeByAngle(params) {
-  const {
-    angle,
-    latitude,
-    longitude,
-    sunDeclination,
-    dhuhr,
-    isNight = false,
-  } = params;
+  const { angle, latitude, longitude: _longitude, sunDeclination, dhuhr, isNight = false } = params;
 
   const term1 = -Math.sin(toRadians(angle));
-  const term2 =
-    Math.sin(toRadians(latitude)) * Math.sin(toRadians(sunDeclination));
-  const term3 =
-    Math.cos(toRadians(latitude)) * Math.cos(toRadians(sunDeclination));
+  const term2 = Math.sin(toRadians(latitude)) * Math.sin(toRadians(sunDeclination));
+  const term3 = Math.cos(toRadians(latitude)) * Math.cos(toRadians(sunDeclination));
 
   const cosValue = (term1 - term2) / term3;
 
@@ -122,11 +111,7 @@ function calculateAsr(params) {
   const decl = toRadians(sunDeclination);
   const lat = toRadians(latitude);
 
-  // Calculate mid-day altitude for more precision
-  const altitude = Math.PI / 2 - Math.abs(lat - decl);
-
   // Get Asr shadow ratio (Shafi'i method)
-  const asrFactor = Math.PI / 4; // arctan(1)
   const shadowRatio = 1 + Math.tan(Math.abs(lat - decl));
 
   // Calculate Asr angle with higher precision
@@ -166,6 +151,29 @@ function formatTime(time) {
   return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
 }
 
+function buildRawTimes(commonParams) {
+  const times = {
+    fajr: calculateFajr(commonParams),
+    imsak: null,
+    sunrise: getTimeByAngle({ ...commonParams, angle: 0.833, isNight: false }),
+    dhuhr: commonParams.dhuhr,
+    asr: calculateAsr(commonParams),
+    sunset: getTimeByAngle({ ...commonParams, angle: 0.833, isNight: true }),
+    maghrib: getTimeByAngle({ ...commonParams, angle: 0.833, isNight: true }),
+    isha: getTimeByAngle({ ...commonParams, angle: PRAYER_PARAMS.isha, isNight: true }),
+  };
+  if (times.fajr) times.imsak = times.fajr + PRAYER_PARAMS.imsakOffset / 60;
+  return times;
+}
+
+function applyJakimAdjustments(times) {
+  for (const prayer in times) {
+    if (times[prayer] && JAKIM_ADJUSTMENTS[prayer]) {
+      times[prayer] += JAKIM_ADJUSTMENTS[prayer] / 60;
+    }
+  }
+}
+
 // Main calculation function
 export function calculatePrayerTimes(
   date,
@@ -175,51 +183,17 @@ export function calculatePrayerTimes(
   useJakimAdjustments = false,
 ) {
   const jd = gregorianToJulian(date);
-  const sunDeclination = getSunDeclination(jd);
-  const eqt = getEquationOfTime(jd);
-
-  // Calculate Dhuhr time
-  const dhuhr = 12 + timezone - longitude / 15 - eqt;
-
-  // Common parameters for angle calculations
+  const dhuhr = 12 + timezone - longitude / 15 - getEquationOfTime(jd);
   const commonParams = {
     latitude,
     longitude,
-    sunDeclination,
+    sunDeclination: getSunDeclination(jd),
     dhuhr,
   };
 
-  // Calculate raw times
-  let times = {
-    fajr: calculateFajr(commonParams),
-    imsak: null, // Will be set after Fajr
-    sunrise: getTimeByAngle({ ...commonParams, angle: 0.833, isNight: false }),
-    dhuhr: dhuhr,
-    asr: calculateAsr(commonParams),
-    sunset: getTimeByAngle({ ...commonParams, angle: 0.833, isNight: true }),
-    maghrib: getTimeByAngle({ ...commonParams, angle: 0.833, isNight: true }),
-    isha: getTimeByAngle({
-      ...commonParams,
-      angle: PRAYER_PARAMS.isha,
-      isNight: true,
-    }),
-  };
+  const times = buildRawTimes(commonParams);
+  if (useJakimAdjustments) applyJakimAdjustments(times);
 
-  // Set Imsak 10 minutes before Fajr
-  if (times.fajr) {
-    times.imsak = times.fajr + PRAYER_PARAMS.imsakOffset / 60;
-  }
-
-  // Apply JAKIM adjustments if requested
-  if (useJakimAdjustments) {
-    for (let prayer in times) {
-      if (times[prayer] && JAKIM_ADJUSTMENTS[prayer]) {
-        times[prayer] += JAKIM_ADJUSTMENTS[prayer] / 60;
-      }
-    }
-  }
-
-  // Convert to formatted time strings
   return Object.fromEntries(
     Object.entries(times).map(([prayer, time]) => [prayer, formatTime(time)]),
   );

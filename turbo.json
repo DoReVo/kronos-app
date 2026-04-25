@@ -1,6 +1,10 @@
 {
+  "globalDependencies": [".oxlintrc.json"],
   "tasks": {
     "test": {},
+    "typecheck": {
+      "dependsOn": ["^build"]
+    },
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**"]
@@ -8,6 +12,11 @@
     "dev": {
       "cache": false,
       "persistent": true
-    }
+    },
+    "lint": {},
+    "format": {
+      "cache": false
+    },
+    "format:check": {}
   }
 }

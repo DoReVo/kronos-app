@@ -4,7 +4,11 @@
   "scripts": {
     "dev": "wrangler dev src/index.ts",
     "deploy": "wrangler deploy --minify src/index.ts",
-    "test": "vitest"
+    "typecheck": "tsgo",
+    "test": "vitest",
+    "lint": "oxlint --type-aware --deny-warnings .",
+    "format": "oxfmt . '!worker-configuration.d.ts'",
+    "format:check": "oxfmt --check . '!worker-configuration.d.ts'"
   },
   "dependencies": {
     "@hono/zod-validator": "^0.7.6",
@@ -16,7 +20,6 @@
   },
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "^0.15.0",
-    "typescript": "^5.9.3",
     "wrangler": "^4.85.0"
   }
 }
