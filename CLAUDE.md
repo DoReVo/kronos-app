@@ -18,10 +18,19 @@ Run from the repo root unless noted:
 - `npm run start:server` / `npm run start:web` — run only one workspace's dev server.
 - `npm run build` — `turbo run build` (respects `^build` so `common` builds first). The `web` build runs `tsgo && vite build`, so stale `common/dist/` types surface here as type errors.
 - `npm run test` — runs `vitest` across workspaces. To run a single test file in `api/`: `npm test -w api -- src/lib/jakim.test.ts`. The api package uses `@cloudflare/vitest-pool-workers`, which **requires `api/wrangler.toml` to exist** (see setup below).
-- `npm run typecheck` — `turbo run typecheck`. Only `api/` defines a `typecheck` script (`tsgo`, `noEmit` from tsconfig); `common/` and `web/` get typechecked through their `build` scripts (which both run `tsgo` first).
-- `npm run lint` — `turbo run lint`. Each workspace runs `oxlint --type-aware .`; tsgolint backs the type-aware rules. The `--type-aware` flag must be on the CLI, *not* in `.oxlintrc.json` — oxlint rejects `options.typeAware` when run from a workspace cwd because it treats the parent-found root config as nested.
+- `npm run typecheck` — `turbo run typecheck`. All three workspaces define a `typecheck` script: `api/` and `web/` run `tsgo` (their tsconfigs already set `noEmit`); `common/` runs `tsgo --noEmit` (its tsconfig emits to `dist/`, so the flag is needed to override).
+- `npm run lint` — `turbo run lint`. Each workspace runs `oxlint --type-aware --deny-warnings .`; tsgolint backs the type-aware rules. `--deny-warnings` makes warnings fail CI (and pre-commit). The `--type-aware` flag must be on the CLI, *not* in `.oxlintrc.json` — oxlint rejects `options.typeAware` when run from a workspace cwd because it treats the parent-found root config as nested.
 - `npm run format` / `npm run format:check` — `oxfmt` per workspace, zero-config. Generated files are excluded via `'!path'` patterns in each workspace's `format` script (oxfmt has no `.oxfmtignore` — it reads `.gitignore`/`.prettierignore` only).
 - `npm run deploy -w api` — deploy the Worker via `wrangler deploy --minify`.
+
+### Git hooks (lefthook)
+
+`lefthook.yml` defines two hooks; they self-install on `npm install` via the root `prepare` script.
+
+- **pre-commit** — runs `oxfmt` then `oxlint --fix --deny-warnings` on staged `*.{ts,tsx,js,jsx,mjs,cjs}` files (excluding `web/src/routeTree.gen.ts` and `api/worker-configuration.d.ts`). Fixes are auto-restaged via `stage_fixed: true`. No `--type-aware` here — kept fast (sub-second).
+- **pre-push** — runs `npx turbo run typecheck test lint` (full repo, type-aware). Mirrors what CI cares about so push-time failures match CI.
+
+Bypass: `git commit --no-verify` / `git push --no-verify`, or `LEFTHOOK=0` in the env. CI doesn't need a guard — `npm ci` runs `prepare` and installs hooks into the runner's `.git`, but they only fire on git ops.
 
 When you change anything in `common/src/`, either run `npm -w @kronos/common run dev` (watch mode) or rebuild it; otherwise `api`/`web` will see stale types from `common/dist/`.
 
@@ -70,6 +79,8 @@ All times the api returns are ISO strings in UTC; the web converts to local disp
 
 ## CI/CD
 
-- `.github/workflows/ci.yml` — runs on PR and push to master: `npm ci`, `build`, `typecheck`, `test`, `lint`, `format:check`.
+- `.github/workflows/pr-checks.yml` — runs on PR and push to master: `npm ci`, `build`, `typecheck`, `test`, `lint`, `format:check`. The job key is `check`; that's the name to use in branch protection rulesets (status check names are job IDs, not workflow names, and rulesets don't accept wildcards).
 - `.github/workflows/deploy-api.yml` — deploys the worker on push to master, gated by path filter (`api/**`, `common/**`, `package-lock.json`). Uses `cloudflare/wrangler-action@v3` with `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` from the GitHub `Production` environment.
+- `.github/workflows/dependabot-auto-merge.yml` — listens for PRs from `dependabot[bot]`, uses `dependabot/fetch-metadata@v2` to inspect the update type, and runs `gh pr review --approve` + `gh pr merge --auto --squash` for `semver-patch` / `semver-minor`. Majors fall through and need human review. Auto-merge waits on the required status check, so a red CI blocks the merge.
+- `.github/dependabot.yml` — weekly Monday 06:00 KL time. npm at `/` (covers all three workspaces). Groups: `tanstack` (`@tanstack/*`, all update types), `react` (`react`, `react-dom`, `@types/react*`, all update types), `types` (other `@types/*`, minor+patch only), `minor-and-patch` (catch-all, minor+patch only). Majors of non-grouped deps surface as individual PRs. github-actions also tracked weekly.
 - The web app is deployed by Cloudflare Pages directly (auto-deploy on push to master, configured outside this repo) — no GitHub Actions step for it.

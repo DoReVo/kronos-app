@@ -6,6 +6,7 @@
     "dev": "vite",
     "start": "vite",
     "build": "tsgo && vite build",
+    "typecheck": "tsgo",
     "preview": "vite preview",
     "lint": "oxlint --type-aware --deny-warnings .",
     "format": "oxfmt . '!src/routeTree.gen.ts'",

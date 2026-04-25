@@ -10,6 +10,7 @@
   "scripts": {
     "dev": "tsgo --watch",
     "build": "del-cli dist && tsgo",
+    "typecheck": "tsgo --noEmit",
     "lint": "oxlint --type-aware --deny-warnings .",
     "format": "oxfmt",
     "format:check": "oxfmt --check"
