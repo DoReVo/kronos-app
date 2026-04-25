@@ -16,7 +16,7 @@ describe("test", () => {
 
     console.log(
       "Class KL",
-      await provider.getTimeForDay(today ?? "", "3.151152512096102", "101.70709983161986"),
+      await provider.getTimeForDay(today ?? "", 3.151152512096102, 101.70709983161986),
     );
   });
 });

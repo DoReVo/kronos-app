@@ -3,7 +3,7 @@ import { z } from "zod";
 import { DateTime, DateTimeOptions } from "luxon";
 import { BasePrayerTimeProvider } from "./provider";
 import { env } from "cloudflare:workers";
-import { TimeNotFound } from "../errors/errors";
+import { TimeNotFound, UpstreamParseError } from "../errors/errors";
 
 const timeSchema = z.object({
   hijri: z.string(),
@@ -24,8 +24,10 @@ const yearlyResponseSchema = z.object({
   prayerTime: z.array(timeSchema),
 });
 
+export const JAKIM_API_URL = "https://www.e-solat.gov.my/index.php";
+
 export class JakimProvider extends BasePrayerTimeProvider {
-  API_URL = "https://www.e-solat.gov.my/index.php";
+  API_URL = JAKIM_API_URL;
 
   sourceOpt: DateTimeOptions = { zone: "Asia/Kuala_Lumpur" };
 
@@ -90,8 +92,11 @@ export class JakimProvider extends BasePrayerTimeProvider {
 
     let response = await (await fetch(url.toString())).json();
 
-    const validatedData = yearlyResponseSchema.parse(response);
-    return validatedData.prayerTime;
+    const validatedData = yearlyResponseSchema.safeParse(response);
+    if (!validatedData.success) {
+      throw new UpstreamParseError("JAKIM yearly takwimsolat", validatedData.error);
+    }
+    return validatedData.data.prayerTime;
   }
 
   async _saveZoneData(zone: Zone, year: string, zoneData: PrayerTime[]) {

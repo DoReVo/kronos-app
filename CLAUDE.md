@@ -52,6 +52,20 @@ When you change anything in `common/src/`, either run `npm -w @kronos/common run
 
 All times the api returns are ISO strings in UTC; the web converts to local display time with Luxon.
 
+- JAKIM upstream returns dates as `dd-MMM-yyyy` ("01-Jan-2026") and times as 24-hour `HH:mm:ss` ("05:43:00"). Test fixtures must match — Luxon's `TT` parser used in `_formatTime` rejects 12-hour `5:42:00 AM`.
+- JAKIM date normalization is off by one for UTC-midnight queries: upstream "01-Jan-2025" parsed in Asia/KL then `setZone("UTC").startOf("day")` becomes `2024-12-31T00:00:00Z`. Cache lookups only match if the client query also normalizes to that day — pass KL-offset ISO (`2025-01-01T00:00:00+08:00`), not UTC midnight.
+- HTTP error mapping lives in `server.onError` (`api/src/index.ts`): `TimeNotFound` → 404, `UpstreamParseError` → 502, default → 500. Routes/providers throw typed errors from `api/src/errors/errors.ts`; the handler sets the status. Don't `c.json(..., 4xx)` from inside route handlers.
+- Zod query-param gotcha: `z.coerce.boolean()` treats `undefined` as `false` and any non-empty string (including `"false"`) as `true`. Use `z.enum(["true","false"]).transform(v => v === "true")` for boolean flags. Numeric query params: `z.coerce.number().min(...).max(...)`.
+
+### API tests (vitest-pool-workers)
+
+- Dispatch via `import { exports } from "cloudflare:workers"` then `exports.default.fetch(url)` — runs in the same isolate as tests, so `vi.stubGlobal` reaches the worker's `fetch`. `import "./index"` next to it triggers HMR rerun on entrypoint changes. `SELF` from `cloudflare:test` is the same thing but marked deprecated.
+- `api/worker-globals.d.ts` declares `Cloudflare.GlobalProps['mainModule'] = typeof import("./src/index")` so `exports.default` is typed. Without it, `tsgo` rejects `.default`.
+- `api/tsconfig.json` `types` must be `["@cloudflare/vitest-pool-workers/types"]` (subpath) — the `cloudflare:test` ambient module lives at that subpath, not at the bare package root.
+- `api/wrangler.toml` requires `main = "src/index.ts"` for vitest-pool-workers to resolve the entrypoint. CLI args (`wrangler dev src/index.ts`) override at runtime, so the dev/deploy scripts still work.
+- `fetchMock` from `cloudflare:test` is *not* exported in `@cloudflare/vitest-pool-workers@0.15.0`. Stub outbound fetch with `vi.stubGlobal("fetch", vi.fn<typeof fetch>(...))`; clean up via `vi.unstubAllGlobals()` in `afterEach`.
+- KV writes are rolled back at end of each test file (per-file storage isolation, automatic). Across tests in the same file, use unique keys or explicit `env.kronos.delete(...)` in `beforeEach`.
+
 ### Toolchain (oxlint + oxfmt + tsgo)
 
 - `tsgo` (`@typescript/native-preview`) replaces `tsc` everywhere. Drop-in CLI flag compatibility, but it's stricter about deprecated `tsconfig` options: `api/tsconfig.json` uses `moduleResolution: "bundler"` (was `"node"` — tsgo flags `node10` as removed), and `common/tsconfig.json` requires explicit `"rootDir": "./src"`.
