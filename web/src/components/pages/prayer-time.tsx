@@ -7,11 +7,11 @@ import { MethodToggle } from "../method-toggle";
 import { UserCoordinate } from "../user-coordinate";
 import { ZoneSelector } from "../ZoneSelector";
 import { Switch } from "../base/Switch";
-import QueryClientProvider from "../../query/query-provider";
+import { QueryErrorBoundary } from "../../query/query-provider";
 import { useAutoPrayerTime, useManualPrayerTime } from "../../hooks/use-prayer-time";
 import { TimeCard } from "../time-card";
 import { Loading } from "../base/loading";
-import { FolioMark, PageItem, RunningHead } from "../page-frame";
+import { FolioMark, RunningHead } from "../page-frame";
 
 const HERO_TIME_STYLE = { fontSize: "clamp(5rem,17vw,9rem)" } as const;
 const EMPTY_ENTRIES: PrayerEntry[] = [];
@@ -151,15 +151,15 @@ function PageContent() {
   });
 
   return (
-    <div className="mx-auto w-full max-w-2xl flex flex-col gap-8">
+    <div className="reveal-stack mx-auto w-full max-w-2xl flex flex-col gap-8">
       <RunningHead section="Prayer Time" folio={FOLIO} />
 
-      <PageItem className="text-center">
+      <div className="text-center">
         <div className="kicker text-ink-mute">Daily Observance</div>
         <div className="font-display italic text-base text-ink-quiet mt-2">{today}</div>
-      </PageItem>
+      </div>
 
-      <PageItem className="flex flex-col items-center gap-6">
+      <div className="flex flex-col items-center gap-6">
         <MethodToggle />
         {method === "auto" && (
           <div className="flex flex-col items-center gap-4 mt-2">
@@ -179,39 +179,29 @@ function PageContent() {
             <ZoneSelector />
           </div>
         )}
-      </PageItem>
+      </div>
 
-      <PageItem>
-        <div className="flex items-center gap-5 text-ink-mute mt-2" aria-hidden="true">
-          <span className="flex-1 border-t border-rule" />
-          <span className="icon-[lucide--asterisk] text-lg" />
-          <span className="flex-1 border-t border-rule" />
-        </div>
-      </PageItem>
+      <div className="flex items-center gap-5 text-ink-mute mt-2" aria-hidden="true">
+        <span className="flex-1 border-t border-rule" />
+        <span className="icon-[lucide--asterisk] text-lg" />
+        <span className="flex-1 border-t border-rule" />
+      </div>
 
       {isLoading && (
-        <PageItem className="flex justify-center pt-8">
+        <div className="flex justify-center pt-8">
           <Loading>fetching times</Loading>
-        </PageItem>
+        </div>
       )}
 
-      {hero !== null && (
-        <PageItem>
-          <Hero entry={hero} now={now} />
-        </PageItem>
-      )}
+      {hero !== null && <Hero entry={hero} now={now} />}
 
       {hero === null && data !== undefined && entries !== null && (
-        <PageItem className="text-center font-display italic text-lg text-ink-quiet py-6">
+        <div className="text-center font-display italic text-lg text-ink-quiet py-6">
           The day&rsquo;s observances are complete.
-        </PageItem>
+        </div>
       )}
 
-      {entries !== null && others.length > 0 && (
-        <PageItem>
-          <PrayerList entries={others} />
-        </PageItem>
-      )}
+      {entries !== null && others.length > 0 && <PrayerList entries={others} />}
 
       <FolioMark folio={FOLIO} />
     </div>
@@ -220,8 +210,8 @@ function PageContent() {
 
 export function PrayerTimePage() {
   return (
-    <QueryClientProvider>
+    <QueryErrorBoundary>
       <PageContent />
-    </QueryClientProvider>
+    </QueryErrorBoundary>
   );
 }

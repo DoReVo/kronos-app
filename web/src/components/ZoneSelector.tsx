@@ -19,8 +19,14 @@ export function ZoneSelector() {
   const [zone, setZoneAtom] = useAtom(zoneAtom);
 
   const onChangeHandler = (value: Key | null) => {
-    const validZone = ZoneSchema.parse(value);
-    void setZoneAtom(validZone);
+    if (value === null) {
+      void setZoneAtom(null);
+      return;
+    }
+    const result = ZoneSchema.safeParse(value);
+    if (result.success) {
+      void setZoneAtom(result.data);
+    }
   };
 
   return (

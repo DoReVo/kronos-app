@@ -2,13 +2,13 @@ import { useEffect, useState } from "react";
 import { useAtom } from "jotai";
 import { Button } from "react-aria-components";
 import { DateTime } from "luxon";
-import QueryClientProvider from "../../query/query-provider";
 import { currencyFromAtom, currencyToAtom } from "../../atoms";
 import { useCurrencyRates } from "../../hooks/use-currency-rates";
 import { CurrencyInput } from "../currency-input";
 import { CurrencySelector } from "../currency-selector";
-import { FolioMark, PageItem, RunningHead } from "../page-frame";
+import { FolioMark, RunningHead } from "../page-frame";
 import { Loading } from "../base/loading";
+import { QueryErrorBoundary } from "../../query/query-provider";
 
 const DEFAULT_FROM = "USD";
 const DEFAULT_TO = "MYR";
@@ -34,11 +34,11 @@ function PageContent() {
 
   if (isLoading || rates === undefined) {
     return (
-      <div className="mx-auto w-full max-w-2xl flex flex-col gap-10">
+      <div className="reveal-stack mx-auto w-full max-w-2xl flex flex-col gap-10">
         <RunningHead section="Currency" folio={FOLIO} />
-        <PageItem className="flex justify-center pt-20">
+        <div className="flex justify-center pt-20">
           <Loading>fetching rates</Loading>
-        </PageItem>
+        </div>
       </div>
     );
   }
@@ -50,11 +50,11 @@ function PageContent() {
 
   if (fromRate === undefined || toRate === undefined) {
     return (
-      <div className="mx-auto w-full max-w-2xl flex flex-col gap-10">
+      <div className="reveal-stack mx-auto w-full max-w-2xl flex flex-col gap-10">
         <RunningHead section="Currency" folio={FOLIO} />
-        <PageItem className="flex justify-center pt-20">
+        <div className="flex justify-center pt-20">
           <Loading>fetching rates</Loading>
-        </PageItem>
+        </div>
       </div>
     );
   }
@@ -84,17 +84,17 @@ function PageContent() {
   const relative = DateTime.fromISO(rates.fetchedAt).toRelative();
 
   return (
-    <div className="mx-auto w-full max-w-2xl flex flex-col gap-10">
+    <div className="reveal-stack mx-auto w-full max-w-2xl flex flex-col gap-10">
       <RunningHead section="Currency" folio={FOLIO} />
 
-      <PageItem className="text-center">
+      <div className="text-center">
         <div className="kicker text-ink-mute">Currency Exchange</div>
         <div className="font-display italic text-xl text-ink-quiet mt-2 max-w-[40ch] mx-auto">
           A daily reckoning of the world&rsquo;s money against itself.
         </div>
-      </PageItem>
+      </div>
 
-      <PageItem className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3">
         <div className="flex items-baseline justify-between">
           <span className="kicker text-ink-mute">From</span>
           <span className="marginalia">premise</span>
@@ -112,9 +112,9 @@ function PageContent() {
           onValueChange={onFromAmountChange}
           variant="muted"
         />
-      </PageItem>
+      </div>
 
-      <PageItem>
+      <div>
         <Button
           aria-label="Swap currencies"
           onPress={onSwap}
@@ -128,9 +128,9 @@ function PageContent() {
           </span>
           <span className="flex-1 border-t border-rule group-hover:border-accent transition-colors" />
         </Button>
-      </PageItem>
+      </div>
 
-      <PageItem className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3">
         <div className="flex items-baseline justify-between">
           <span className="kicker text-accent">To</span>
           <span className="marginalia">result</span>
@@ -148,9 +148,9 @@ function PageContent() {
           onValueChange={onToAmountChange}
           variant="hero"
         />
-      </PageItem>
+      </div>
 
-      <PageItem className="flex flex-col gap-1 pt-2">
+      <div className="flex flex-col gap-1 pt-2">
         <div className="flex items-baseline gap-3">
           <span className="kicker text-ink-mute">Rate</span>
           <span className="flex-1 border-t border-dotted border-rule translate-y-[-0.3rem]" />
@@ -163,7 +163,7 @@ function PageContent() {
             rates settled {relative}
           </div>
         )}
-      </PageItem>
+      </div>
 
       <FolioMark folio={FOLIO} />
     </div>
@@ -172,8 +172,8 @@ function PageContent() {
 
 export function CurrencyConverter() {
   return (
-    <QueryClientProvider>
+    <QueryErrorBoundary>
       <PageContent />
-    </QueryClientProvider>
+    </QueryErrorBoundary>
   );
 }

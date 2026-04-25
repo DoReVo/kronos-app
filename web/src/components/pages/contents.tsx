@@ -1,9 +1,10 @@
 import { Link } from "@tanstack/react-router";
-import { motion } from "motion/react";
 import { DateTime } from "luxon";
-import { itemVariants } from "../page-frame";
+import { TodayParticulars } from "../today-particulars";
 
 const MASTHEAD_STYLE = { fontSize: "clamp(5rem,22vw,15rem)" } as const;
+
+const NUMERALS = ["I", "II", "III", "IV", "V"] as const;
 
 interface Entry {
   kind: "live";
@@ -32,7 +33,7 @@ const sections: Section[] = [
         kind: "live",
         to: "/prayer-time",
         title: "Prayer Time",
-        tagline: "A daily observance, set by JAKIM and the sun.",
+        tagline: "Daily prayer times — JAKIM zones, or astronomical from your location.",
         folio: "02",
       },
     ],
@@ -44,7 +45,7 @@ const sections: Section[] = [
         kind: "live",
         to: "/currency",
         title: "Currency Converter",
-        tagline: "Live foreign exchange against the United States dollar.",
+        tagline: "Live foreign exchange rates against the United States dollar.",
         folio: "04",
       },
       {
@@ -84,51 +85,51 @@ export function ContentsPage() {
   const { issueNumber, hijri, gregorian } = useIssue();
 
   return (
-    <div className="flex flex-col">
-      <motion.div variants={itemVariants} className="text-center pt-4 sm:pt-12">
-        <div className="kicker text-ink-mute mb-6 sm:mb-8 tracking-[0.3em]">
+    <div className="reveal-stack flex flex-col">
+      <div className="text-center pt-8 sm:pt-20">
+        <div className="kicker text-ink-mute mb-12 sm:mb-16 tracking-[0.3em]">
           <span className="mx-1">Vol. I</span>
           <span className="text-ink-faint mx-2">·</span>
           <span className="mx-1">N° {issueNumber}</span>
           <span className="text-ink-faint mx-2">·</span>
           <span className="mx-1">{hijri}</span>
         </div>
-      </motion.div>
+      </div>
 
-      <motion.h1
-        variants={itemVariants}
+      <h1
         className="font-display italic font-normal text-center text-ink leading-[0.92] tracking-[-0.02em]"
         style={MASTHEAD_STYLE}
       >
         Kronos
-      </motion.h1>
+      </h1>
 
-      <motion.div variants={itemVariants} className="text-center mt-6 mb-2">
+      <div className="text-center mt-10 mb-2">
         <span className="kicker text-ink-quiet">A private almanac of utilities</span>
-      </motion.div>
+      </div>
 
-      <motion.div
-        variants={itemVariants}
+      <div
         aria-hidden="true"
         className="flex items-center justify-center gap-6 mt-6 mb-12 sm:mb-16 text-ink-mute mx-auto w-full max-w-md"
       >
         <span className="flex-1 border-t border-rule" />
         <span className="icon-[lucide--asterisk] text-2xl" />
         <span className="flex-1 border-t border-rule" />
-      </motion.div>
+      </div>
 
-      <motion.div
-        variants={itemVariants}
-        className="kicker text-ink-mute text-center mb-10 sm:mb-14 tracking-[0.3em]"
-      >
+      <TodayParticulars />
+
+      <div className="kicker text-ink-mute text-center mb-10 sm:mb-14 tracking-[0.35em]">
         Contents · {gregorian}
-      </motion.div>
+      </div>
 
-      <div className="flex flex-col gap-12 sm:gap-14">
-        {sections.map((section) => (
-          <motion.section variants={itemVariants} key={section.kicker} className="flex flex-col">
-            <div className="kicker text-ink-mute mb-5 pb-2 border-b border-rule-soft">
-              {section.kicker}
+      <div className="mx-auto w-full max-w-3xl flex flex-col gap-12 sm:gap-14">
+        {sections.map((section, idx) => (
+          <section key={section.kicker} className="flex flex-col">
+            <div className="flex items-baseline gap-3 mb-6 pb-2 border-b border-rule">
+              <span className="font-display italic text-2xl text-accent leading-none">
+                {NUMERALS[idx]}
+              </span>
+              <span className="kicker text-ink-quiet text-sm">— {section.kicker}</span>
             </div>
             <ul className="flex flex-col gap-5">
               {section.entries.map((entry) => (
@@ -144,7 +145,7 @@ export function ContentsPage() {
                           {entry.folio}
                         </span>
                       </div>
-                      <div className="font-display italic text-base text-ink-quiet mt-1 max-w-[36ch]">
+                      <div className="font-display italic text-base leading-snug text-ink-quiet mt-1 max-w-[36ch] text-balance">
                         {entry.tagline}
                       </div>
                     </Link>
@@ -155,7 +156,7 @@ export function ContentsPage() {
                           {entry.title}
                         </span>
                       </div>
-                      <div className="font-display italic text-sm text-ink-mute mt-1 max-w-[40ch]">
+                      <div className="font-display italic text-sm leading-snug text-ink-mute mt-1 max-w-[40ch] text-balance">
                         {entry.tagline}
                       </div>
                     </div>
@@ -163,26 +164,38 @@ export function ContentsPage() {
                 </li>
               ))}
             </ul>
-          </motion.section>
+          </section>
         ))}
       </div>
 
-      <motion.aside
-        variants={itemVariants}
-        className="mt-16 sm:mt-20 max-w-[44ch] mx-auto text-center"
+      <div
+        aria-hidden="true"
+        className="flex items-center justify-center gap-5 mt-20 sm:mt-24 mb-10 text-ink-mute mx-auto w-full max-w-md"
       >
-        <div className="kicker text-ink-mute mb-3">From the Editor</div>
-        <p className="font-display italic text-lg leading-relaxed text-ink-quiet">
-          This is a small private periodical of personal tools — an experiment in treating utilities
-          like artefacts, set in type and bound between dates. Pages are added when needed, never to
+        <span className="flex-1 border-t border-rule" />
+        <span className="icon-[lucide--asterisk] text-base" />
+        <span className="flex-1 border-t border-rule" />
+      </div>
+
+      <aside className="max-w-[48ch] mx-auto">
+        <div className="kicker text-ink-mute mb-4 text-center">From the Editor</div>
+        <p className="font-display italic text-lg leading-[1.55] text-ink-quiet text-balance">
+          <span className="float-left font-display not-italic font-normal text-[5rem] leading-[0.78] text-accent mr-3 mt-[0.35rem] select-none">
+            A
+          </span>
+          daily reference, kept for personal use. Currency rates against the dollar; prayer times by
+          JAKIM and the sun. The volume numbers, Hijri dates, and editorial chrome are a small
+          affectation — the data is the part that&rsquo;s real. Pages are added when wanted, not on
           a schedule.
         </p>
-      </motion.aside>
+      </aside>
 
-      <motion.footer
-        variants={itemVariants}
-        className="mt-20 sm:mt-28 pb-4 text-center kicker text-ink-faint flex items-center justify-center gap-2"
-      >
+      <div
+        aria-hidden="true"
+        className="mt-20 sm:mt-28 mx-auto w-full max-w-md border-t border-rule"
+      />
+
+      <footer className="pt-6 pb-4 text-center kicker text-ink-faint flex items-center justify-center gap-2">
         <span>·</span>
         <span aria-hidden="true" className="icon-[lucide--asterisk] text-[0.7rem]" />
         <span>·</span>
@@ -190,7 +203,7 @@ export function ContentsPage() {
         <span>·</span>
         <span>MMXXVI</span>
         <span>·</span>
-      </motion.footer>
+      </footer>
     </div>
   );
 }
