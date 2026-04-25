@@ -7,19 +7,6 @@ import { createKy } from "../api/ky";
 
 const ky = createKy();
 
-const fmt = (iso: string): string => DateTime.fromISO(iso).toLocaleString(DateTime.TIME_SIMPLE);
-
-const formatTimes = (data: PrayerTime): PrayerTime => ({
-  date: data.date,
-  imsak: fmt(data.imsak),
-  subuh: fmt(data.subuh),
-  syuruk: fmt(data.syuruk),
-  zohor: fmt(data.zohor),
-  asar: fmt(data.asar),
-  maghrib: fmt(data.maghrib),
-  isyak: fmt(data.isyak),
-});
-
 export function useAutoPrayerTime(useAdjustment: boolean) {
   const latLong = useAtomValue(latlongAtom);
   const method = useAtomValue(methodAtom);
@@ -32,7 +19,6 @@ export function useAutoPrayerTime(useAdjustment: boolean) {
     retryDelay: 500,
     refetchInterval: 30000,
     enabled: latLong[0] !== null && latLong[1] !== null && method === "auto",
-    select: formatTimes,
     queryFn: () =>
       ky
         .get("time/auto", {
@@ -58,7 +44,6 @@ export function useManualPrayerTime() {
     retryDelay: 500,
     refetchInterval: 30000,
     enabled: zone !== null && method === "manual",
-    select: formatTimes,
     queryFn: () =>
       ky
         .get("time/manual", {

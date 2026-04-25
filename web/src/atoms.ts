@@ -34,3 +34,15 @@ export const zoneAtom = atomWithStorage<Zone | null>(
   null,
   makeStorage<Zone | null>(),
 );
+
+export const currencyFromAtom = atomWithStorage<string>(
+  "kronos_currency_from",
+  "USD",
+  makeStorage<string>(),
+);
+
+export const currencyToAtom = atomWithStorage<string>(
+  "kronos_currency_to",
+  "MYR",
+  makeStorage<string>(),
+);

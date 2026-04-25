@@ -14,6 +14,15 @@ export const PrayerTimeSchema = z.object({
 
 export const PrayerTimeArraySchema = z.array(PrayerTimeSchema);
 
+export const CurrencyRatesSchema = z.object({
+  base: z.string().length(3),
+  fetchedAt: z.iso.datetime({ offset: true }),
+  nextUpdateAt: z.iso.datetime({ offset: true }),
+  rates: z.record(z.string().length(3), z.number().positive()),
+});
+
+export type CurrencyRates = z.infer<typeof CurrencyRatesSchema>;
+
 export const ZoneSchema = z.enum([
   "JHR01",
   "JHR02",

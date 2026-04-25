@@ -24,7 +24,7 @@ export function ZoneSelector() {
   };
 
   return (
-    <ComboBox value={zone} onChange={onChangeHandler}>
+    <ComboBox value={zone} onChange={onChangeHandler} placeholder="Choose a zone">
       {zones.map((entry) => (
         <ComboBox.Section key={entry.title} title={entry.title} items={entry.items}>
           {(item) => {

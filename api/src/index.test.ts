@@ -1,7 +1,8 @@
 import { env, exports } from "cloudflare:workers";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { PrayerTimeSchema, ZONE_OPTIONS, type Zone } from "@kronos/common";
+import { CurrencyRatesSchema, PrayerTimeSchema, ZONE_OPTIONS, type Zone } from "@kronos/common";
 import { JAKIM_API_URL } from "./lib/jakim";
+import { OPEN_ER_API_URL, RATES_KV_KEY } from "./lib/exchange-rate";
 import "./index";
 
 afterEach(() => {
@@ -279,6 +280,115 @@ describe("CORS on error", () => {
       url("/time/manual", { date: "2025-06-15T00:00:00+08:00", zone: "JHR01" }),
     );
     expect(res.status).toBe(404);
+    expect(res.headers.get("access-control-allow-origin")).toBe("*");
+  });
+});
+
+const validUpstreamRates = {
+  result: "success" as const,
+  provider: "https://www.exchangerate-api.com",
+  documentation: "...",
+  terms_of_use: "...",
+  time_last_update_unix: 1777075352,
+  time_last_update_utc: "Sat, 25 Apr 2026 00:02:32 +0000",
+  time_next_update_unix: 1777163022,
+  time_next_update_utc: "Sun, 26 Apr 2026 00:23:42 +0000",
+  time_eol_unix: 0,
+  base_code: "USD",
+  rates: { USD: 1, EUR: 0.92, MYR: 4.42, JPY: 155.3 },
+};
+
+function respondOpenER(body: unknown, init?: ResponseInit): UpstreamResponder {
+  return (urlStr) =>
+    urlStr === OPEN_ER_API_URL
+      ? typeof body === "string"
+        ? new Response(body, init)
+        : Response.json(body, init)
+      : null;
+}
+
+describe("GET /currency/rates", () => {
+  beforeEach(async () => {
+    await env.kronos.delete(RATES_KV_KEY);
+  });
+
+  it("fetches upstream on cache miss, writes KV, returns a CurrencyRates body", async () => {
+    const fetchSpy = stubUpstream(respondOpenER(validUpstreamRates));
+
+    const res = await exports.default.fetch(url("/currency/rates"));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(() => CurrencyRatesSchema.parse(body)).not.toThrow();
+
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(await env.kronos.get(RATES_KV_KEY)).not.toBeNull();
+  });
+
+  it("serves from KV on cache hit and does not call upstream", async () => {
+    const fetchSpy = stubUpstream();
+    const seeded = {
+      base: "USD",
+      fetchedAt: "2026-04-25T00:02:32.000Z",
+      nextUpdateAt: "2026-04-26T00:23:42.000Z",
+      rates: { USD: 1, EUR: 0.92, MYR: 4.42 },
+    };
+    await env.kronos.put(RATES_KV_KEY, JSON.stringify(seeded));
+
+    const res = await exports.default.fetch(url("/currency/rates"));
+    expect(res.status).toBe(200);
+    await expect(res.json()).resolves.toEqual(seeded);
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it("returns 502 and does not write KV when upstream payload is malformed", async () => {
+    stubUpstream(respondOpenER({ wrong: "shape" }));
+
+    const res = await exports.default.fetch(url("/currency/rates"));
+    expect(res.status).toBe(502);
+    expect(await env.kronos.get(RATES_KV_KEY)).toBeNull();
+  });
+
+  it("returns 500 when upstream returns a non-JSON 5xx", async () => {
+    stubUpstream(respondOpenER("upstream is down", { status: 500 }));
+
+    const res = await exports.default.fetch(url("/currency/rates"));
+    expect(res.status).toBe(500);
+  });
+
+  it('returns 502 when upstream signals { result: "error" }', async () => {
+    stubUpstream(respondOpenER({ result: "error", "error-type": "unsupported-code" }));
+
+    const res = await exports.default.fetch(url("/currency/rates"));
+    expect(res.status).toBe(502);
+  });
+
+  it("KV write after a successful fetch round-trips through CurrencyRatesSchema", async () => {
+    stubUpstream(respondOpenER(validUpstreamRates));
+
+    const res = await exports.default.fetch(url("/currency/rates"));
+    expect(res.status).toBe(200);
+
+    const stored = await env.kronos.get(RATES_KV_KEY);
+    expect(stored).not.toBeNull();
+    const parsed: unknown = JSON.parse(stored!);
+    expect(() => CurrencyRatesSchema.parse(parsed)).not.toThrow();
+  });
+
+  it("dedupes upstream calls across two sequential cold-cache requests", async () => {
+    const fetchSpy = stubUpstream(respondOpenER(validUpstreamRates));
+
+    const r1 = await exports.default.fetch(url("/currency/rates"));
+    const r2 = await exports.default.fetch(url("/currency/rates"));
+    expect(r1.status).toBe(200);
+    expect(r2.status).toBe(200);
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("preserves Access-Control-Allow-Origin on a 502 response", async () => {
+    stubUpstream(respondOpenER({ wrong: "shape" }));
+
+    const res = await exports.default.fetch(url("/currency/rates"));
+    expect(res.status).toBe(502);
     expect(res.headers.get("access-control-allow-origin")).toBe("*");
   });
 });

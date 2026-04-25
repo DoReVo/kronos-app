@@ -3,20 +3,21 @@ import { useAtom } from "jotai";
 import { Label, Radio, RadioGroup } from "react-aria-components";
 import { methodAtom } from "../atoms";
 
-const RootStyle = cs(["flex flex-row items-stretch gap-4"]);
+const RadioStyle = cs(["group cursor-pointer outline-none", "flex flex-col gap-1", "py-2 flex-1"]);
 
-const RadioStyle = cs([
-  "flex flex-col gap-2",
-  "p-4 rounded flex-1",
-  "border border-app-border",
-  "data-[selected]:bg-method-selector-background-selected",
-  "bg-method-selector-background",
-  "text-card-text",
+const RadioTitleStyle = cs([
+  "kicker transition-colors",
+  "group-data-[selected]:text-accent",
+  "text-ink-mute",
+  "pb-1",
+  "border-b border-transparent",
+  "group-data-[selected]:border-accent",
 ]);
 
-const LabelStyle = cs(["text-sm"]);
-
-const RadioTitleStyle = cs(["font-bold text-lg"]);
+const LabelStyle = cs([
+  "font-display italic text-sm text-ink-quiet leading-snug",
+  "group-data-[selected]:text-ink",
+]);
 
 export function MethodToggle() {
   const [method, setMethod] = useAtom(methodAtom);
@@ -27,14 +28,19 @@ export function MethodToggle() {
   };
 
   return (
-    <RadioGroup className={RootStyle} value={method} onChange={onChangeHandler}>
+    <RadioGroup
+      className="flex flex-row items-stretch gap-8"
+      value={method}
+      onChange={onChangeHandler}
+      aria-label="Method"
+    >
       <Radio value="auto" className={RadioStyle}>
         <span className={RadioTitleStyle}>Auto</span>
-        <Label className={LabelStyle}>Time will be based on your current location</Label>
+        <Label className={LabelStyle}>Times derived from your current location</Label>
       </Radio>
       <Radio value="manual" className={RadioStyle}>
         <span className={RadioTitleStyle}>Manual</span>
-        <Label className={LabelStyle}>You choose your own location</Label>
+        <Label className={LabelStyle}>You choose your JAKIM zone</Label>
       </Radio>
     </RadioGroup>
   );

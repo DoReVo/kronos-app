@@ -2,14 +2,14 @@ import { DateTime } from "luxon";
 
 export function StatusBar() {
   const currentDate = DateTime.now();
-
-  const formatted = currentDate.toLocaleString(DateTime.DATE_HUGE);
-  const locale = navigator.language;
+  const formatted = currentDate.toLocaleString({
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
 
   return (
-    <div className="text-center">
-      <div>{formatted}</div>
-      <div>{locale}</div>
-    </div>
+    <div className="text-center font-display italic text-base text-ink-quiet">{formatted}</div>
   );
 }
