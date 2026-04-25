@@ -1,6 +1,5 @@
 import { assert, describe, test } from "vitest";
-import { AladhanPrayerTimeProvider, CustomTimeProvider } from "./time";
-import * as RawCustom from "./custom.js";
+import { AladhanPrayerTimeProvider } from "./time";
 import { DateTime } from "luxon";
 
 describe("AladhanPrayerTimeProvider()", () => {
@@ -11,22 +10,5 @@ describe("AladhanPrayerTimeProvider()", () => {
 
     assert.isObject(res);
     console.log("response", res);
-  });
-});
-
-describe("Internals produce same output for Custom Provider", () => {
-  const customProvider = new CustomTimeProvider();
-
-  test("Internals produce same output", () => {
-    assert.strictEqual(RawCustom.toRadians(1), customProvider.toRadians(1));
-    assert.strictEqual(RawCustom.toDegrees(1), customProvider.toDegrees(1));
-
-    const rawDate = new Date();
-    const luxonDate = DateTime.now();
-
-    assert.strictEqual(
-      RawCustom.gregorianToJulian(rawDate),
-      customProvider.gregorianToJulian(luxonDate),
-    );
   });
 });

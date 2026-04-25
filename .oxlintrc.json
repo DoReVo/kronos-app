@@ -63,7 +63,7 @@
     "**/node_modules/**",
     "web/src/routeTree.gen.ts",
     "api/worker-configuration.d.ts",
-    "api/src/lib/custom.ts",
+    "api/scripts/**",
     "**/*.gen.ts"
   ]
 }
