@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import server from ".";
 import { DateTime } from "luxon";
 
-const sample = {
+const _sample = {
   code: 200,
   status: "OK",
   data: {
@@ -73,10 +73,10 @@ const sample = {
   },
 };
 
-describe("API server", async () => {
+describe("API server", () => {
   test.skip("Return timing for the day", async () => {
     const params = new URLSearchParams({
-      date: DateTime.now().toISO() ?? "",
+      date: DateTime.now().toISO(),
     }).toString();
 
     const url = `/time?${params}`;
@@ -93,15 +93,5 @@ describe("API server", async () => {
 
     console.log("RESPONSE", body);
     expect(res.status).toBe(200);
-  });
-});
-
-describe("Sandbox", async () => {
-  test("Hehe", async () => {
-    const myFunc = (val: unknown) => (String(val), Number());
-
-    const x = myFunc(3);
-
-    console.log(x);
   });
 });

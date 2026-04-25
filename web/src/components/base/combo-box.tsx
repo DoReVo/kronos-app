@@ -45,12 +45,12 @@ export function ComboBox<T extends object>({
         />
         <AriaButton></AriaButton>
       </div>
-      {description && <AriaText slot="description">{description}</AriaText>}
+      {description !== null && description !== undefined && (
+        <AriaText slot="description">{description}</AriaText>
+      )}
       <AriaFieldError>{errorMessage}</AriaFieldError>
       <AriaPopover className={PopoverStyle}>
-        <AriaListBox className="text-card-text flex flex-col gap-2">
-          {children}
-        </AriaListBox>
+        <AriaListBox className="text-card-text flex flex-col gap-2">{children}</AriaListBox>
       </AriaPopover>
     </AriaComboBox>
   );

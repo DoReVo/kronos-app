@@ -23,17 +23,14 @@ export function MethodToggle() {
 
   const onChangeHandler = (value: string) => {
     if (value !== "manual" && value !== "auto") return;
-
-    setMethod(value);
+    void setMethod(value);
   };
 
   return (
     <RadioGroup className={RootStyle} value={method} onChange={onChangeHandler}>
       <Radio value="auto" className={RadioStyle}>
         <span className={RadioTitleStyle}>Auto</span>
-        <Label className={LabelStyle}>
-          Time will be based on your current location
-        </Label>
+        <Label className={LabelStyle}>Time will be based on your current location</Label>
       </Radio>
       <Radio value="manual" className={RadioStyle}>
         <span className={RadioTitleStyle}>Manual</span>

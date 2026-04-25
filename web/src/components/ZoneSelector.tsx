@@ -5,13 +5,13 @@ import { zoneAtom } from "../atoms";
 import { useAtom } from "jotai";
 
 export function ZoneSelector() {
-  const zones = Object.entries(ZONE_OPTIONS).map(([key, value]) => {
-    const items = Object.entries(value).map(([key, value]) => ({
-      zone: key,
-      value,
+  const zones = Object.entries(ZONE_OPTIONS).map(([groupTitle, group]) => {
+    const items = Object.entries(group).map(([zoneKey, zoneName]) => ({
+      zone: zoneKey,
+      value: zoneName,
     }));
     return {
-      title: key,
+      title: groupTitle,
       items,
     };
   });
@@ -20,20 +20,15 @@ export function ZoneSelector() {
 
   const onChangeHandler = (key: Key | null) => {
     const validZone = ZoneSchema.parse(key);
-
-    setZoneAtom(validZone);
+    void setZoneAtom(validZone);
   };
 
   return (
     <ComboBox selectedKey={zone} onSelectionChange={onChangeHandler}>
       {zones.map((entry) => (
-        <ComboBox.Section
-          key={entry.title}
-          title={entry.title}
-          items={entry.items}
-        >
-          {(zone) => {
-            return <ComboBox.Item id={zone.zone}>{zone.value}</ComboBox.Item>;
+        <ComboBox.Section key={entry.title} title={entry.title} items={entry.items}>
+          {(item) => {
+            return <ComboBox.Item id={item.zone}>{item.value}</ComboBox.Item>;
           }}
         </ComboBox.Section>
       ))}

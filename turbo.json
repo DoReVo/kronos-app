@@ -1,4 +1,5 @@
 {
+  "globalDependencies": [".oxlintrc.json"],
   "tasks": {
     "test": {},
     "typecheck": {
@@ -11,6 +12,11 @@
     "dev": {
       "cache": false,
       "persistent": true
-    }
+    },
+    "lint": {},
+    "format": {
+      "cache": false
+    },
+    "format:check": {}
   }
 }

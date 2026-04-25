@@ -1,4 +1,4 @@
-import { assert, describe, expect, test } from "vitest";
+import { assert, describe, test } from "vitest";
 import { AladhanPrayerTimeProvider, CustomTimeProvider } from "./time";
 import * as RawCustom from "./custom.js";
 import { DateTime } from "luxon";
@@ -7,11 +7,7 @@ describe("AladhanPrayerTimeProvider()", () => {
   test.skip("Fetch a time from the server", async () => {
     const s = new AladhanPrayerTimeProvider();
 
-    const res = await s.getTimeForDay(
-      DateTime.now().toISO() ?? "",
-      "3.1358976",
-      "101.613568",
-    );
+    const res = await s.getTimeForDay(DateTime.now().toISO(), "3.1358976", "101.613568");
 
     assert.isObject(res);
     console.log("response", res);
@@ -21,7 +17,7 @@ describe("AladhanPrayerTimeProvider()", () => {
 describe("Internals produce same output for Custom Provider", () => {
   const customProvider = new CustomTimeProvider();
 
-  test("Internals produce same output", async () => {
+  test("Internals produce same output", () => {
     assert.strictEqual(RawCustom.toRadians(1), customProvider.toRadians(1));
     assert.strictEqual(RawCustom.toDegrees(1), customProvider.toDegrees(1));
 

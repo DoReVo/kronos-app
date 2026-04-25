@@ -1,9 +1,4 @@
-import {
-  dateTimeToCommonDay,
-  PrayerTime,
-  PrayerTimeArraySchema,
-  Zone,
-} from "@kronos/common";
+import { dateTimeToCommonDay, PrayerTime, PrayerTimeArraySchema, Zone } from "@kronos/common";
 import { z } from "zod";
 import { DateTime, DateTimeOptions } from "luxon";
 import { BasePrayerTimeProvider } from "./provider";
@@ -34,18 +29,12 @@ export class JakimProvider extends BasePrayerTimeProvider {
 
   sourceOpt: DateTimeOptions = { zone: "Asia/Kuala_Lumpur" };
 
-  constructor() {
-    super();
-  }
-
   _generateZoneKey(zone: Zone, year: string) {
     return `${zone}-${year}`;
   }
 
   _formatTime(timeStr: string, date: DateTime<true>) {
-    const time = DateTime.fromFormat(timeStr, "TT", this.sourceOpt).setZone(
-      "UTC",
-    );
+    const time = DateTime.fromFormat(timeStr, "TT", this.sourceOpt).setZone("UTC");
 
     if (!time.isValid) {
       throw new Error(`Cannot parse time into luxon object: ${timeStr}`);
@@ -117,20 +106,17 @@ export class JakimProvider extends BasePrayerTimeProvider {
     const key = this._generateZoneKey(zone, year);
     const zoneData = await env.kronos.get(key);
 
-    if (!zoneData) return null;
+    if (zoneData === null) return null;
 
     const jsonZonedata: unknown = JSON.parse(zoneData);
     return PrayerTimeArraySchema.parse(jsonZonedata);
   }
 
-  _findDayTime(
-    parsedDate: DateTime<true>,
-    yearly: PrayerTime[],
-  ): PrayerTime | null {
+  _findDayTime(parsedDate: DateTime<true>, yearly: PrayerTime[]): PrayerTime | null {
     const dateStr = parsedDate.toISO();
 
-    const entry = yearly.find((entry) => {
-      return entry.date === dateStr;
+    const entry = yearly.find((day) => {
+      return day.date === dateStr;
     });
 
     if (!entry) return null;
@@ -138,10 +124,7 @@ export class JakimProvider extends BasePrayerTimeProvider {
     return entry;
   }
 
-  async fetchTimeForDay(
-    parsedDate: DateTime<true>,
-    zone: Zone,
-  ): Promise<PrayerTime> {
+  async fetchTimeForDay(parsedDate: DateTime<true>, zone: Zone): Promise<PrayerTime> {
     const year = parsedDate.year.toString();
     let yearlyData = await this._getZoneData(zone, year);
 
@@ -161,7 +144,7 @@ export class JakimProvider extends BasePrayerTimeProvider {
     return entry;
   }
 
-  async getTimeForDay(date: DateTime<true>, zone: Zone): Promise<PrayerTime> {
-    return await this.fetchTimeForDay(date, zone);
+  getTimeForDay(date: DateTime<true>, zone: Zone): Promise<PrayerTime> {
+    return this.fetchTimeForDay(date, zone);
   }
 }

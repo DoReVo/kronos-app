@@ -5,7 +5,8 @@ export function isoToCommonDateTime(dateTime: string) {
 
   if (result.isValid) {
     return result;
-  } else return null;
+  }
+  return null;
 }
 
 export function dateTimeToCommonDay(dateTime: DateTime<true>) {

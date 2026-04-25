@@ -1,4 +1,4 @@
-import z from "zod";
+import { z } from "zod";
 export * from "./utils.js";
 
 export const PrayerTimeSchema = z.object({
@@ -133,17 +133,14 @@ export const ZONE_OPTIONS = {
   Sabah: {
     SBH01:
       "Bahagian Sandakan (Timur), Bukit Garam, Semawang, Temanggong, Tambisan, Bandar Sandakan, Sukau",
-    SBH02:
-      "Beluran, Telupid, Pinangah, Terusan, Kuamut, Bahagian Sandakan (Barat)",
-    SBH03:
-      "Lahad Datu, Silabukan, Kunak, Sahabat, Semporna, Tungku, Bahagian Tawau  (Timur)",
+    SBH02: "Beluran, Telupid, Pinangah, Terusan, Kuamut, Bahagian Sandakan (Barat)",
+    SBH03: "Lahad Datu, Silabukan, Kunak, Sahabat, Semporna, Tungku, Bahagian Tawau  (Timur)",
     SBH04: "Bandar Tawau, Balong, Merotai, Kalabakan, Bahagian Tawau (Barat)",
     SBH05: "Kudat, Kota Marudu, Pitas, Pulau Banggi, Bahagian Kudat",
     SBH06: "Gunung Kinabalu",
     SBH07:
       "Kota Kinabalu, Ranau, Kota Belud, Tuaran, Penampang, Papar, Putatan, Bahagian Pantai Barat",
-    SBH08:
-      "Pensiangan, Keningau, Tambunan, Nabawan, Bahagian Pendalaman (Atas)",
+    SBH08: "Pensiangan, Keningau, Tambunan, Nabawan, Bahagian Pendalaman (Atas)",
     SBH09:
       "Beaufort, Kuala Penyu, Sipitang, Tenom, Long Pa Sia, Membakut, Weston, Bahagian Pendalaman (Bawah)",
   },

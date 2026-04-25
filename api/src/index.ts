@@ -1,13 +1,8 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import {
-  dateTimeToCommonDay,
-  isoToCommonDateTime,
-  ZONE_OPTIONS,
-  ZoneSchema,
-} from "@kronos/common";
+import { dateTimeToCommonDay, isoToCommonDateTime, ZONE_OPTIONS, ZoneSchema } from "@kronos/common";
 import { zValidator } from "@hono/zod-validator";
-import z from "zod";
+import { z } from "zod";
 import { CustomTimeProvider } from "./lib/time";
 import { JakimProvider } from "./lib/jakim";
 
@@ -29,7 +24,7 @@ server.get("/", (c) => {
   return c.json({ message: "Welcome to Kronos API" });
 });
 
-server.get("/selectionoptions", async (c) => {
+server.get("/selectionoptions", (c) => {
   return c.json(ZONE_OPTIONS);
 });
 
@@ -48,16 +43,10 @@ server.get(
   ),
 
   async (c) => {
-    const { date, latitude, longitude, useJakimAdjustments } =
-      c.req.valid("query");
+    const { date, latitude, longitude, useJakimAdjustments } = c.req.valid("query");
 
     const time = new CustomTimeProvider();
-    const res = await time.getTimeForDay(
-      date,
-      latitude,
-      longitude,
-      useJakimAdjustments,
-    );
+    const res = await time.getTimeForDay(date, latitude, longitude, useJakimAdjustments);
     return c.json(res);
   },
 );

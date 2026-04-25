@@ -1,12 +1,15 @@
 {
   "name": "@kronos/web",
-  "type": "module",
   "version": "0.0.1",
+  "type": "module",
   "scripts": {
     "dev": "vite",
     "start": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview"
+    "build": "tsgo && vite build",
+    "preview": "vite preview",
+    "lint": "oxlint --type-aware .",
+    "format": "oxfmt . '!src/routeTree.gen.ts'",
+    "format:check": "oxfmt --check . '!src/routeTree.gen.ts'"
   },
   "dependencies": {
     "@kronos/common": "^1.0.0",
@@ -30,10 +33,7 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.0.4",
     "clsx": "^2.1.1",
-    "prettier": "^3.8.3",
-    "prettier-plugin-tailwindcss": "^0.7.3",
     "tailwindcss": "^4.2.4",
-    "typescript": "^5.9.3",
     "vite": "^8.0.10",
     "vite-plugin-pwa": "^1.0.0"
   }
