@@ -322,7 +322,11 @@ export class CustomTimeProvider extends BasePrayerTimeProvider {
     longitude: number,
     useJakimAdjustments: boolean = false,
   ): PrayerTime {
-    const _date = DateTime.fromISO(date);
+    // setZone: true preserves the offset embedded in the ISO string. Without
+    // it, Luxon rebases to the system zone — fine on a KL dev box, but on
+    // Cloudflare Workers / CI (UTC) the date components and offset shift,
+    // producing UT-anchored prayer times (off by the input zone's offset).
+    const _date = DateTime.fromISO(date, { setZone: true });
     const baseJD = this.gregorianToJulian(_date);
     const offsetHours = _date.offset / 60;
     const interp = this._solarInterpolators(baseJD);
