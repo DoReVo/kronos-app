@@ -5,20 +5,28 @@ import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { CustomTimeProvider } from "./lib/time";
 import { JakimProvider } from "./lib/jakim";
+import { TimeNotFound, UpstreamParseError } from "./errors/errors";
 
-type Bindings = {
-  KronosKV: KVNamespace;
-};
+const server = new Hono();
 
-const server = new Hono<{ Bindings: Bindings }>();
-
-// CORS middlware
 server.use(
   "/*",
   cors({
     origin: "*",
   }),
 );
+
+server.onError((err, c) => {
+  if (err instanceof TimeNotFound) {
+    return c.json({ error: "TimeNotFound", message: err.message }, 404);
+  }
+  if (err instanceof UpstreamParseError) {
+    console.error(err);
+    return c.json({ error: "UpstreamParseError", message: err.message }, 502);
+  }
+  console.error(err);
+  return c.json({ error: "InternalServerError", message: "Internal server error" }, 500);
+});
 
 server.get("/", (c) => {
   return c.json({ message: "Welcome to Kronos API" });
@@ -32,16 +40,13 @@ server.get(
   "/time/auto",
   zValidator(
     "query",
-    z
-      .object({
-        date: z.iso.datetime({ offset: true }),
-        latitude: z.string(),
-        longitude: z.string(),
-        useJakimAdjustments: z.coerce.boolean(),
-      })
-      .required(),
+    z.object({
+      date: z.iso.datetime({ offset: true }),
+      latitude: z.coerce.number().min(-90).max(90),
+      longitude: z.coerce.number().min(-180).max(180),
+      useJakimAdjustments: z.enum(["true", "false"]).transform((v) => v === "true"),
+    }),
   ),
-
   async (c) => {
     const { date, latitude, longitude, useJakimAdjustments } = c.req.valid("query");
 
@@ -55,12 +60,10 @@ server.get(
   "/time/manual",
   zValidator(
     "query",
-    z
-      .object({
-        date: z.iso.datetime({ offset: true }),
-        zone: ZoneSchema,
-      })
-      .required(),
+    z.object({
+      date: z.iso.datetime({ offset: true }),
+      zone: ZoneSchema,
+    }),
   ),
   async (c) => {
     const { date, zone } = c.req.valid("query");

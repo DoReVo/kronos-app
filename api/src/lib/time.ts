@@ -295,18 +295,17 @@ export class CustomTimeProvider extends BasePrayerTimeProvider {
   // Main calculation function
   fetchTimeForDay(
     date: string,
-    latitude: string,
-    longitude: string,
+    latitude: number,
+    longitude: number,
     useJakimAdjustments: boolean = false,
   ): PrayerTime {
     const _date = DateTime.fromISO(date);
     const jd = this.gregorianToJulian(_date);
-    const _longitude = Number(longitude);
-    const zohor = 12 + _date.offset / 60 - _longitude / 15 - this.getEquationOfTime(jd);
+    const zohor = 12 + _date.offset / 60 - longitude / 15 - this.getEquationOfTime(jd);
 
     const commonParams = {
-      latitude: Number(latitude),
-      longitude: _longitude,
+      latitude,
+      longitude,
       sunDeclination: this.getSunDeclination(jd),
       zohor,
     };
@@ -334,8 +333,8 @@ export class CustomTimeProvider extends BasePrayerTimeProvider {
 
   getTimeForDay(
     date: string,
-    latitude: string,
-    longitude: string,
+    latitude: number,
+    longitude: number,
     useJakimAdjustments: boolean = false,
   ): Promise<PrayerTime> {
     return Promise.resolve(this.fetchTimeForDay(date, latitude, longitude, useJakimAdjustments));

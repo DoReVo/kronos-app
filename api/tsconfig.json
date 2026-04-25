@@ -6,7 +6,7 @@
     "esModuleInterop": true,
     "strict": true,
     "lib": ["esnext"],
-    "types": ["@cloudflare/vitest-pool-workers"],
+    "types": ["@cloudflare/vitest-pool-workers/types"],
     "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx",
     "skipLibCheck": true,
