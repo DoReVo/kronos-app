@@ -6,6 +6,11 @@ const MASTHEAD_STYLE = { fontSize: "clamp(5rem,22vw,15rem)" } as const;
 
 const NUMERALS = ["I", "II", "III", "IV", "V"] as const;
 
+const SETTING_DATE = DateTime.fromISO(__BUILD_DATE__).toLocaleString({
+  day: "numeric",
+  month: "long",
+});
+
 interface Entry {
   kind: "live";
   to: "/prayer-time" | "/currency";
@@ -195,14 +200,19 @@ export function ContentsPage() {
         className="mt-20 sm:mt-28 mx-auto w-full max-w-md border-t border-rule"
       />
 
-      <footer className="pt-6 pb-4 text-center kicker text-ink-faint flex items-center justify-center gap-2">
-        <span>·</span>
-        <span aria-hidden="true" className="icon-[lucide--asterisk] text-[0.7rem]" />
-        <span>·</span>
-        <span>Printed on the web</span>
-        <span>·</span>
-        <span>MMXXVI</span>
-        <span>·</span>
+      <footer className="pt-6 pb-6 text-center text-ink-faint flex flex-col items-center gap-1.5">
+        <div className="kicker flex items-center gap-2">
+          <span>·</span>
+          <span aria-hidden="true" className="icon-[lucide--asterisk] text-[0.7rem]" />
+          <span>·</span>
+          <span>Printed on the web</span>
+          <span>·</span>
+          <span>MMXXVI</span>
+          <span>·</span>
+        </div>
+        <div className="marginalia">
+          Edition {__APP_VERSION__} · set {SETTING_DATE}
+        </div>
       </footer>
     </div>
   );

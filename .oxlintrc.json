@@ -48,6 +48,14 @@
         "typescript/no-unsafe-return": "off",
         "typescript/no-unsafe-member-access": "off"
       }
+    },
+    {
+      "files": ["**/vite.config.ts"],
+      "rules": {
+        "typescript/no-unsafe-call": "off",
+        "typescript/no-unsafe-return": "off",
+        "typescript/no-unsafe-member-access": "off"
+      }
     }
   ],
   "ignorePatterns": [
