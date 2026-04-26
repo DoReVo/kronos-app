@@ -18,6 +18,7 @@ interface HairlineChartProps {
   primaryLabel?: string;
   hoverFormat?: (index: number) => { date: string; primary: string; compare?: string | null };
   overlay?: { values: number[]; label?: string } | null;
+  peakLabel?: string | undefined;
 }
 
 const DEFAULT_HEIGHT = 320;
@@ -171,6 +172,7 @@ export function HairlineChart({
   primaryLabel,
   hoverFormat,
   overlay = null,
+  peakLabel,
 }: HairlineChartProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [width, setWidth] = useState(800);
@@ -298,6 +300,28 @@ export function HairlineChart({
       ? hoverFormat(highlightIndex)
       : null;
 
+  const highlightCurveY =
+    highlightIndex !== undefined && highlightIndex !== null
+      ? yAtIndex(values, highlightIndex, innerHeight, max)
+      : null;
+
+  const peakInfo = useMemo(() => {
+    if (values.length === 0 || max <= 0) return null;
+    let peakIdx = 0;
+    let peakVal = values[0] ?? 0;
+    for (let i = 1; i < values.length; i++) {
+      const v = values[i] ?? 0;
+      if (v > peakVal) {
+        peakVal = v;
+        peakIdx = i;
+      }
+    }
+    if (peakVal <= 0) return null;
+    const x = values.length > 1 ? (peakIdx / (values.length - 1)) * plotWidth : 0;
+    const y = yAtIndex(values, peakIdx, innerHeight, max);
+    return { x, y, value: peakVal };
+  }, [values, plotWidth, innerHeight, max]);
+
   return (
     <div ref={containerRef} className="relative w-full" style={svgStyle}>
       <svg
@@ -366,15 +390,52 @@ export function HairlineChart({
             strokeLinejoin="round"
           />
 
-          {highlightX !== null && (
-            <line
-              x1={highlightX}
-              x2={highlightX}
-              y1={0}
-              y2={innerHeight}
-              stroke="var(--color-accent)"
-              strokeWidth={0.75}
-            />
+          {highlightX !== null && highlightCurveY !== null && (
+            <g>
+              <line
+                x1={highlightX}
+                x2={highlightX}
+                y1={0}
+                y2={highlightCurveY}
+                stroke="var(--color-accent)"
+                strokeWidth={0.75}
+              />
+              <circle
+                cx={highlightX}
+                cy={highlightCurveY}
+                r={2.5}
+                fill="var(--color-accent)"
+                stroke="var(--color-paper)"
+                strokeWidth={1}
+              />
+            </g>
+          )}
+
+          {/* peak callout — mono number floating above the apex */}
+          {peakLabel !== undefined && peakInfo !== null && highlightX === null && (
+            <g>
+              <line
+                x1={peakInfo.x}
+                x2={peakInfo.x}
+                y1={Math.max(0, peakInfo.y - 14)}
+                y2={peakInfo.y}
+                stroke="currentColor"
+                strokeWidth={0.5}
+                strokeOpacity={0.4}
+              />
+              <text
+                x={peakInfo.x}
+                y={Math.max(0, peakInfo.y - 18)}
+                fontFamily="var(--font-mono)"
+                fontSize="10"
+                textAnchor="middle"
+                fill="currentColor"
+                opacity={0.7}
+                style={ENDLABEL_STYLE}
+              >
+                {peakLabel}
+              </text>
+            </g>
           )}
 
           {/* baseline rule extends across plot only */}

@@ -34,8 +34,10 @@ import { HairlineChart } from "../hairline-chart";
 import { addDays, dayDiff, pickYears, sliceSeries } from "../../lib/pandemic-slice";
 
 const FOLIO = "06";
-const HERO_STYLE = { fontSize: "clamp(4rem,15vw,9rem)" } as const;
+const HERO_STYLE = { fontSize: "clamp(5rem,18vw,13rem)" } as const;
+const HERO_COMPARE_STYLE = { fontSize: "clamp(2.25rem,8vw,5rem)" } as const;
 const METRIC_STYLE = { fontSize: "clamp(1.75rem,4.5vw,2.5rem)" } as const;
+const DATE_INPUT_STYLE = { fontSize: "clamp(1.75rem,5vw,2.5rem)" } as const;
 const CASES_THRESHOLD = 1000;
 const DEATHS_THRESHOLD = 10;
 const CHART_HEIGHT = 320;
@@ -81,9 +83,11 @@ interface ChapterMarkProps {
 
 function ChapterMark({ numeral, title }: ChapterMarkProps) {
   return (
-    <div className="flex items-baseline gap-3 pb-2 border-b border-rule">
-      <span className="font-display italic text-2xl text-accent leading-none">{numeral}</span>
-      <span className="kicker text-ink-quiet text-sm">— {title}</span>
+    <div className="relative flex items-end gap-3 border-b border-rule pb-1 mt-4">
+      <span className="font-display italic text-5xl sm:text-6xl text-accent leading-[0.7] -mb-3 select-none">
+        {numeral}
+      </span>
+      <span className="kicker text-ink-quiet text-sm pb-1">— {title}</span>
     </div>
   );
 }
@@ -230,7 +234,7 @@ function CompareSlot({ states, value, onChange }: CompareSlotProps) {
 }
 
 const dateGroupStyle = cs([
-  "inline-flex items-baseline gap-2",
+  "inline-flex items-baseline gap-3",
   "border-0 border-b border-rule data-[focus-within]:border-accent data-[focus-within]:border-b-2",
   "py-2 transition-colors",
 ]);
@@ -244,7 +248,7 @@ const dateSegmentStyle = cs([
 
 const dateTriggerStyle = cs([
   "text-ink-mute hover:text-accent data-[focus-visible]:text-accent",
-  "transition-colors cursor-pointer outline-none px-1",
+  "transition-colors cursor-pointer outline-none px-1 self-center",
 ]);
 
 const datePopoverStyle = cs([
@@ -328,14 +332,17 @@ function OnThisDay({ dataset, state }: OnThisDayProps) {
         aria-label="Date"
       >
         <Group className={dateGroupStyle}>
-          <DateInput className="inline-flex items-baseline gap-px font-display italic text-lg text-ink">
+          <DateInput
+            className="inline-flex items-baseline gap-px font-display italic text-ink"
+            style={DATE_INPUT_STYLE}
+          >
             {(segment) => <DateSegment segment={segment} className={dateSegmentStyle} />}
           </DateInput>
           <AriaButton className={dateTriggerStyle}>
-            <span aria-hidden="true" className="icon-[lucide--calendar] text-base" />
+            <span aria-hidden="true" className="icon-[lucide--calendar] text-lg" />
           </AriaButton>
         </Group>
-        <AriaPopover placement="bottom start" offset={8} className={datePopoverStyle}>
+        <AriaPopover placement="bottom" offset={6} className={datePopoverStyle}>
           <Dialog className="outline-none">
             <Calendar className="flex flex-col gap-3">
               <header className="flex items-center justify-between gap-4">
@@ -387,7 +394,7 @@ function OnThisDay({ dataset, state }: OnThisDayProps) {
       <div className="grid grid-cols-2 gap-6">
         <div className="flex flex-col">
           <span className="kicker text-ink-mute">Cases</span>
-          <span className="font-display italic text-3xl sm:text-4xl text-ink tabular mt-1">
+          <span className="font-display italic text-xl sm:text-2xl text-ink tabular mt-1">
             {casesValue === null ? "—" : fmtInt(casesValue)}
           </span>
           {!inCasesRange && (
@@ -398,7 +405,7 @@ function OnThisDay({ dataset, state }: OnThisDayProps) {
         </div>
         <div className="flex flex-col">
           <span className="kicker text-ink-mute">Deaths</span>
-          <span className="font-display italic text-3xl sm:text-4xl text-ink tabular mt-1">
+          <span className="font-display italic text-xl sm:text-2xl text-ink tabular mt-1">
             {deathsValue === null ? "—" : fmtInt(deathsValue)}
           </span>
           {!inDeathsRange && (
@@ -497,6 +504,8 @@ function PageContent() {
     ? fmtDate(slice.peak.date, { day: "numeric", month: "long", year: "numeric" })
     : "—";
 
+  const totalDaysObserved = dayDiff(dataset.cases.from, dataset.cases.to) + 1;
+
   return (
     <div className="reveal-stack mx-auto w-full max-w-3xl flex flex-col gap-14">
       <RunningHead section="Pandemic" folio={FOLIO} />
@@ -506,6 +515,14 @@ function PageContent() {
         <div className="kicker text-ink-mute">SARS-CoV-2 · Malaysia</div>
         <div className="font-display italic text-2xl sm:text-3xl text-ink-quiet max-w-[42ch] mx-auto">
           A standing record of cases and deaths, set from MoH&rsquo;s linelists.
+        </div>
+        <div className="kicker text-ink-faint tabular flex items-center justify-center gap-3 mt-1">
+          <span>Volume {FOLIO}</span>
+          <span aria-hidden="true">·</span>
+          <span className="font-mono not-italic">{fmtInt(totalDaysObserved)}</span>
+          <span>days observed</span>
+          <span aria-hidden="true">·</span>
+          <span>{dataset.states.length} states</span>
         </div>
       </header>
 
@@ -527,11 +544,21 @@ function PageContent() {
             recorded
           </p>
 
-          <div
-            className="font-display italic text-ink tabular leading-[0.92] tracking-tight text-center"
-            style={HERO_STYLE}
-          >
-            {fmtInt(slice.total)}
+          <div className="flex flex-col items-center leading-[0.86]">
+            <div className="font-display italic text-ink tabular tracking-tight" style={HERO_STYLE}>
+              {fmtInt(slice.total)}
+            </div>
+            {compareSlice !== null && effectiveCompare !== null && (
+              <div
+                className="font-display italic text-accent tabular tracking-tight mt-2"
+                style={HERO_COMPARE_STYLE}
+              >
+                <span aria-hidden="true" className="text-ink-faint mr-3">
+                  ·
+                </span>
+                {fmtInt(compareSlice.total)}
+              </div>
+            )}
           </div>
 
           <div className="flex flex-col items-center gap-3">
@@ -584,9 +611,9 @@ function PageContent() {
       </section>
 
       {/* II — The curve */}
-      <section className="flex flex-col gap-5">
+      <section className="flex flex-col gap-5 xl:relative">
         <ChapterMark numeral="II" title="The curve" />
-        <div className="flex items-baseline gap-3">
+        <div className="flex items-baseline gap-3 xl:hidden">
           <span className="font-display italic text-ink-quiet text-base">
             Daily {metric}, drawn at hairline weight.
           </span>
@@ -595,6 +622,25 @@ function PageContent() {
             {fmtMonthYearShort(slice.from)} — {fmtMonthYearShort(slice.to)}
           </span>
         </div>
+        <span className="hidden xl:block font-display italic text-ink-quiet text-base">
+          Daily {metric}, drawn at hairline weight.
+        </span>
+        <aside className="hidden xl:flex xl:flex-col xl:gap-1 xl:absolute xl:left-full xl:ml-6 xl:top-12 xl:w-44">
+          <span className="kicker text-ink-mute">Period</span>
+          <span className="marginalia">{fmtMonthYearShort(slice.from)}</span>
+          <span className="marginalia">— {fmtMonthYearShort(slice.to)}</span>
+          {slice.peak !== null && (
+            <>
+              <span className="kicker text-ink-mute mt-3">Peak</span>
+              <span className="marginalia">
+                {fmtInt(slice.peak.value)} {metric}
+              </span>
+              <span className="marginalia text-ink-faint">
+                {fmtDate(slice.peak.date, { day: "numeric", month: "short", year: "numeric" })}
+              </span>
+            </>
+          )}
+        </aside>
         <HairlineChart
           values={slice.values}
           height={CHART_HEIGHT}
@@ -607,6 +653,7 @@ function PageContent() {
           primaryLabel={state}
           overlay={overlayProp}
           hoverFormat={formatHover}
+          peakLabel={slice.peak === null ? undefined : `${fmtInt(slice.peak.value)} ↑`}
         />
       </section>
 
@@ -619,10 +666,10 @@ function PageContent() {
       <section className="border-t border-rule-soft pt-8 flex flex-col gap-2">
         <span className="kicker text-ink-mute">Source</span>
         <p className="font-display italic text-sm text-ink-quiet leading-relaxed max-w-[58ch]">
-          <span className="float-left font-display not-italic font-normal text-[2.5rem] leading-[0.78] text-accent mr-2 mt-[0.2rem] select-none">
+          <span className="float-left font-display not-italic font-normal text-[3.5rem] leading-[0.72] text-accent mr-3 mt-[0.18rem] select-none">
             M
           </span>
-          oH Malaysia, via{" "}
+          <span className="small-caps not-italic text-ink tracking-wide">oH Malaysia</span>, via{" "}
           <a
             href="https://data.gov.my"
             className="text-accent hover:underline"
