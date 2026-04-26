@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useAtom } from "jotai";
 import { DateTime } from "luxon";
 import type { PandemicDataset, PandemicMetric } from "@kronos/common";
@@ -8,65 +8,232 @@ import { Loading } from "../base/loading";
 import { FolioMark, RunningHead } from "../page-frame";
 import { Imprint } from "../imprint";
 import { QueryErrorBoundary } from "../../query/query-provider";
-import { Switch } from "../base/Switch";
-import { PandemicStateSelector } from "../pandemic-state-selector";
+import { InlinePicker, PickerListItem } from "../inline-picker";
 import { HairlineChart } from "../hairline-chart";
 import { addDays, dayDiff, pickYears, sliceSeries } from "../../lib/pandemic-slice";
 
 const FOLIO = "06";
 const HERO_STYLE = { fontSize: "clamp(4rem,15vw,9rem)" } as const;
+const METRIC_STYLE = { fontSize: "clamp(1.75rem,4.5vw,2.5rem)" } as const;
 const CASES_THRESHOLD = 1000;
 const DEATHS_THRESHOLD = 10;
+const CHART_HEIGHT = 320;
 
-function metricLabel(metric: PandemicMetric): string {
-  return metric === "cases" ? "cases" : "deaths";
-}
+const NAMED_EVENTS: { date: string; label: string }[] = [
+  { date: "2020-03-18", label: "MCO begins" },
+  { date: "2021-02-24", label: "vaccine rollout" },
+  { date: "2021-08-26", label: "delta peak" },
+  { date: "2022-04-01", label: "endemic transition" },
+];
 
 function fmtInt(n: number): string {
   return new Intl.NumberFormat("en-US").format(Math.round(n));
 }
 
 function fmtDate(iso: string, opts?: Intl.DateTimeFormatOptions): string {
-  const dt = DateTime.fromISO(iso);
-  return dt.toLocaleString(opts ?? { day: "numeric", month: "long", year: "numeric" });
+  return DateTime.fromISO(iso).toLocaleString(
+    opts ?? { day: "numeric", month: "long", year: "numeric" },
+  );
 }
 
-interface YearTabsProps {
+function fmtMonthYearShort(iso: string): string {
+  return DateTime.fromISO(iso).toLocaleString({ day: "numeric", month: "short", year: "numeric" });
+}
+
+interface ChapterMarkProps {
+  numeral: string;
+  title: string;
+}
+
+function ChapterMark({ numeral, title }: ChapterMarkProps) {
+  return (
+    <div className="flex items-baseline gap-3 pb-2 border-b border-rule">
+      <span className="font-display italic text-2xl text-accent leading-none">{numeral}</span>
+      <span className="kicker text-ink-quiet text-sm">— {title}</span>
+    </div>
+  );
+}
+
+interface MetricToggleProps {
+  value: PandemicMetric;
+  onChange: (next: PandemicMetric) => void;
+}
+
+function MetricToggle({ value, onChange }: MetricToggleProps) {
+  return (
+    <div className="flex items-baseline gap-6 select-none">
+      <button
+        type="button"
+        onClick={() => {
+          onChange("cases");
+        }}
+        className={
+          value === "cases"
+            ? "font-display italic text-ink border-b-2 border-accent pb-1 transition-colors cursor-pointer"
+            : "font-display italic text-ink-quiet hover:text-accent transition-colors cursor-pointer"
+        }
+        style={METRIC_STYLE}
+      >
+        cases
+      </button>
+      <span aria-hidden="true" className="text-ink-faint text-2xl">
+        ·
+      </span>
+      <button
+        type="button"
+        onClick={() => {
+          onChange("deaths");
+        }}
+        className={
+          value === "deaths"
+            ? "font-display italic text-ink border-b-2 border-accent pb-1 transition-colors cursor-pointer"
+            : "font-display italic text-ink-quiet hover:text-accent transition-colors cursor-pointer"
+        }
+        style={METRIC_STYLE}
+      >
+        deaths
+      </button>
+    </div>
+  );
+}
+
+interface YearPickerProps {
   available: string[];
   value: string;
-  onChange: (year: string) => void;
+  onChange: (next: string) => void;
+  label: string;
 }
 
-function YearTabs({ available, value, onChange }: YearTabsProps) {
+function YearPicker({ available, value, onChange, label }: YearPickerProps) {
   const all: { key: string; label: string }[] = [
-    { key: "all", label: "all" },
+    { key: "all", label: "all years" },
     ...available.map((y) => ({ key: y, label: y })),
   ];
   return (
-    <div className="flex flex-wrap items-baseline justify-center gap-x-3 gap-y-1 kicker">
-      {all.map((t, i) => (
-        <span key={t.key} className="inline-flex items-baseline gap-3">
-          {i > 0 && (
-            <span aria-hidden="true" className="text-ink-faint">
-              ·
-            </span>
-          )}
-          <button
-            type="button"
-            onClick={() => {
-              onChange(t.key);
-            }}
-            className={
-              t.key === value
-                ? "text-accent border-b border-accent pb-px transition-colors cursor-pointer"
-                : "text-ink-mute hover:text-accent transition-colors cursor-pointer"
-            }
-          >
-            {t.label}
-          </button>
-        </span>
-      ))}
-    </div>
+    <InlinePicker label={label}>
+      {(close) => (
+        <div className="flex flex-col">
+          <div className="kicker text-ink-mute mb-2">Year</div>
+          {all.map((t) => (
+            <PickerListItem
+              key={t.key}
+              selected={t.key === value}
+              onPress={() => {
+                onChange(t.key);
+                close();
+              }}
+            >
+              {t.label}
+            </PickerListItem>
+          ))}
+        </div>
+      )}
+    </InlinePicker>
+  );
+}
+
+interface StatePickerProps {
+  states: string[];
+  value: string;
+  onChange: (next: string) => void;
+}
+
+function StatePicker({ states, value, onChange }: StatePickerProps) {
+  return (
+    <InlinePicker label={value}>
+      {(close) => (
+        <div className="flex flex-col">
+          <div className="kicker text-ink-mute mb-2">State</div>
+          {states.map((s) => (
+            <PickerListItem
+              key={s}
+              selected={s === value}
+              onPress={() => {
+                onChange(s);
+                close();
+              }}
+            >
+              {s}
+            </PickerListItem>
+          ))}
+        </div>
+      )}
+    </InlinePicker>
+  );
+}
+
+interface CompareSlotProps {
+  states: string[];
+  value: string | null;
+  onChange: (next: string | null) => void;
+}
+
+function CompareSlot({ states, value, onChange }: CompareSlotProps) {
+  if (value === null) {
+    return (
+      <InlinePicker label="+ alongside another state">
+        {(close) => (
+          <div className="flex flex-col">
+            <div className="kicker text-ink-mute mb-2">Compare with</div>
+            {states.map((s) => (
+              <PickerListItem
+                key={s}
+                selected={false}
+                onPress={() => {
+                  onChange(s);
+                  close();
+                }}
+              >
+                {s}
+              </PickerListItem>
+            ))}
+          </div>
+        )}
+      </InlinePicker>
+    );
+  }
+  return (
+    <span className="font-display italic text-ink-quiet inline-flex items-baseline gap-2">
+      <span>alongside</span>
+      <InlinePicker label={value}>
+        {(close) => (
+          <div className="flex flex-col">
+            <div className="kicker text-ink-mute mb-2">Compare with</div>
+            <PickerListItem
+              selected={false}
+              onPress={() => {
+                onChange(null);
+                close();
+              }}
+            >
+              (none)
+            </PickerListItem>
+            {states.map((s) => (
+              <PickerListItem
+                key={s}
+                selected={s === value}
+                onPress={() => {
+                  onChange(s);
+                  close();
+                }}
+              >
+                {s}
+              </PickerListItem>
+            ))}
+          </div>
+        )}
+      </InlinePicker>
+      <button
+        type="button"
+        onClick={() => {
+          onChange(null);
+        }}
+        className="kicker text-ink-faint hover:text-accent transition-colors cursor-pointer"
+        aria-label="Clear comparison"
+      >
+        ×
+      </button>
+    </span>
   );
 }
 
@@ -79,6 +246,7 @@ function OnThisDay({ dataset, state }: OnThisDayProps) {
   const minDate =
     dataset.cases.from < dataset.deaths.from ? dataset.cases.from : dataset.deaths.from;
   const maxDate = dataset.cases.to > dataset.deaths.to ? dataset.cases.to : dataset.deaths.to;
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
   const [date, setDate] = useState<string>("2021-08-26");
 
@@ -100,23 +268,41 @@ function OnThisDay({ dataset, state }: OnThisDayProps) {
       ? (deathsValues[deathsIdx] ?? 0)
       : null;
 
+  const openPicker = () => {
+    const el = inputRef.current;
+    if (el && typeof el.showPicker === "function") {
+      el.showPicker();
+    } else {
+      el?.focus();
+    }
+  };
+
   return (
-    <section className="flex flex-col gap-5 pt-4">
-      <div className="flex items-baseline gap-3">
-        <span className="kicker text-ink-mute">On this day</span>
-        <span className="flex-1 border-t border-dotted border-rule translate-y-[-0.3rem]" />
-        <span className="marginalia">{state}</span>
+    <section className="flex flex-col gap-6">
+      <div className="font-display italic text-ink-quiet text-base sm:text-lg max-w-[44ch]">
+        Where the country stood on a particular day, set against the rest of the record.
       </div>
-      <input
-        type="date"
-        value={date}
-        min={minDate}
-        max={maxDate}
-        onChange={(e) => {
-          setDate(e.target.value);
-        }}
-        className="bg-transparent border-0 border-b border-rule focus:border-accent focus:border-b-2 outline-none font-display italic text-lg text-ink py-2 px-0 transition-colors w-full max-w-xs"
-      />
+      <div className="relative inline-flex items-baseline gap-3 max-w-xs">
+        <input
+          ref={inputRef}
+          type="date"
+          value={date}
+          min={minDate}
+          max={maxDate}
+          onChange={(e) => {
+            setDate(e.target.value);
+          }}
+          className="kronos-bare-date bg-transparent border-0 border-b border-rule focus:border-accent focus:border-b-2 outline-none font-display italic text-lg text-ink py-2 px-0 transition-colors flex-1"
+        />
+        <button
+          type="button"
+          onClick={openPicker}
+          className="text-ink-mute hover:text-accent transition-colors cursor-pointer"
+          aria-label="Open date picker"
+        >
+          <span aria-hidden="true" className="icon-[lucide--calendar] text-base" />
+        </button>
+      </div>
       {!valid && (
         <div className="font-display italic text-ink-quiet">
           The record does not extend to that day.
@@ -131,8 +317,7 @@ function OnThisDay({ dataset, state }: OnThisDayProps) {
             </span>
             {!inCasesRange && (
               <span className="marginalia mt-1">
-                cases record ended{" "}
-                {fmtDate(dataset.cases.to, { day: "numeric", month: "short", year: "numeric" })}
+                cases record ended {fmtMonthYearShort(dataset.cases.to)}
               </span>
             )}
           </div>
@@ -143,8 +328,7 @@ function OnThisDay({ dataset, state }: OnThisDayProps) {
             </span>
             {!inDeathsRange && (
               <span className="marginalia mt-1">
-                deaths record ended{" "}
-                {fmtDate(dataset.deaths.to, { day: "numeric", month: "short", year: "numeric" })}
+                deaths record ended {fmtMonthYearShort(dataset.deaths.to)}
               </span>
             )}
           </div>
@@ -187,10 +371,36 @@ function PageContent() {
   );
   const overlayProp = useMemo(
     () =>
-      compareSlice === null
-        ? null
-        : { values: compareSlice.values, ariaLabel: effectiveCompare ?? "" },
+      compareSlice === null ? null : { values: compareSlice.values, label: effectiveCompare ?? "" },
     [compareSlice, effectiveCompare],
+  );
+  const visibleEvents = useMemo(
+    () =>
+      slice === null ? [] : NAMED_EVENTS.filter((e) => e.date >= slice.from && e.date <= slice.to),
+    [slice],
+  );
+  const formatHover = useCallback(
+    (i: number) => {
+      if (slice === null) return { date: "", primary: "", compare: null };
+      const date = fmtDate(addDays(slice.from, i), {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+      const v = slice.values[i] ?? 0;
+      const primary = `${fmtInt(v)} ${state}`;
+      const compareV =
+        compareSlice && i < compareSlice.values.length ? (compareSlice.values[i] ?? 0) : null;
+      return {
+        date,
+        primary,
+        compare:
+          compareV !== null && effectiveCompare !== null
+            ? `${fmtInt(compareV)} ${effectiveCompare}`
+            : null,
+      };
+    },
+    [slice, state, compareSlice, effectiveCompare],
   );
 
   if (isLoading || !dataset || !slice || !series) {
@@ -204,24 +414,17 @@ function PageContent() {
     );
   }
 
-  const period =
+  const periodLabel =
     effectiveYear === "all"
-      ? `${fmtDate(slice.from, { year: "numeric" })}–${fmtDate(slice.to, { year: "numeric" })}`
+      ? `${DateTime.fromISO(slice.from).year}–${DateTime.fromISO(slice.to).year}`
       : effectiveYear;
 
-  const highlightDate = highlight === null ? null : addDays(slice.from, highlight);
-  const highlightValue =
-    highlight === null || highlight >= slice.values.length ? null : (slice.values[highlight] ?? 0);
-  const highlightCompare =
-    compareSlice === null || highlight === null || highlight >= compareSlice.values.length
-      ? null
-      : (compareSlice.values[highlight] ?? 0);
-  const compareLabel = effectiveCompare;
-
-  const dailyAvg = slice.mean;
+  const peakOrdinal = slice.peak
+    ? fmtDate(slice.peak.date, { day: "numeric", month: "long", year: "numeric" })
+    : "—";
 
   return (
-    <div className="reveal-stack mx-auto w-full max-w-3xl flex flex-col gap-12">
+    <div className="reveal-stack mx-auto w-full max-w-3xl flex flex-col gap-14">
       <RunningHead section="Pandemic" folio={FOLIO} />
       <Imprint setAt={dataUpdatedAt} />
 
@@ -232,137 +435,120 @@ function PageContent() {
         </div>
       </header>
 
-      <div className="flex justify-center">
-        <Switch
-          isSelected={metric === "deaths"}
-          onChange={(b) => {
-            setMetric(b ? "deaths" : "cases");
-          }}
-          offLabel="cases"
-          onLabel="deaths"
-        >
-          Reading
-        </Switch>
-      </div>
+      {/* I — At a glance */}
+      <section className="flex flex-col gap-8">
+        <ChapterMark numeral="I" title="At a glance" />
 
-      <section className="flex flex-col items-center text-center gap-4">
-        <div className="kicker text-accent">
-          <span className="text-ink-faint">·</span> {state}{" "}
-          <span className="text-ink-faint">·</span> {period}{" "}
-          <span className="text-ink-faint">·</span>
+        <div className="flex flex-col gap-7">
+          <p className="font-display italic text-lg sm:text-xl text-ink-quiet leading-snug">
+            Across{" "}
+            <YearPicker
+              available={years}
+              value={effectiveYear}
+              onChange={(y) => void setYear(y)}
+              label={periodLabel}
+            />
+            ,{" "}
+            <StatePicker states={dataset.states} value={state} onChange={(s) => void setState(s)} />{" "}
+            recorded
+          </p>
+
+          <div
+            className="font-display italic text-ink tabular leading-[0.92] tracking-tight text-center"
+            style={HERO_STYLE}
+          >
+            {fmtInt(slice.total)}
+          </div>
+
+          <div className="flex flex-col items-center gap-3">
+            <MetricToggle value={metric} onChange={setMetric} />
+            <p className="font-display italic text-ink-quiet text-base sm:text-lg leading-snug">
+              <CompareSlot
+                states={otherStates}
+                value={effectiveCompare}
+                onChange={(s) => void setCompare(s)}
+              />
+            </p>
+          </div>
         </div>
-        <div
-          className="font-display italic text-ink tabular leading-[0.92] tracking-tight"
-          style={HERO_STYLE}
-        >
-          {fmtInt(slice.total)}
-        </div>
-        <div className="font-display italic text-base sm:text-lg text-ink-quiet max-w-[44ch]">
-          {metricLabel(metric)} recorded across the period.
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-4 border-t border-b border-rule-soft py-6">
+          <div className="flex flex-col gap-1">
+            <span className="kicker text-ink-mute">Peak day</span>
+            {slice.peak ? (
+              <>
+                <span className="font-display italic text-xl text-ink">{peakOrdinal}</span>
+                <span className="font-mono tabular text-xs text-ink-quiet">
+                  {fmtInt(slice.peak.value)} {metric}
+                </span>
+              </>
+            ) : (
+              <span className="font-display italic text-ink-quiet">—</span>
+            )}
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="kicker text-ink-mute">Daily mean</span>
+            <span className="font-display italic text-xl text-ink tabular">
+              {fmtInt(slice.mean)}
+            </span>
+            <span className="font-mono tabular text-xs text-ink-quiet">
+              across {slice.values.length} days
+            </span>
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="kicker text-ink-mute">
+              {metric === "cases" ? "Days exceeding a thousand" : "Days exceeding ten"}
+            </span>
+            <span className="font-display italic text-xl text-ink tabular">
+              {fmtInt(slice.daysOverThreshold)}
+            </span>
+            <span className="font-mono tabular text-xs text-ink-quiet">
+              of {slice.values.length}
+            </span>
+          </div>
         </div>
       </section>
 
-      <section className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-4 border-t border-b border-rule-soft py-6">
-        <div className="flex flex-col gap-1">
-          <span className="kicker text-ink-mute">Peak day</span>
-          {slice.peak ? (
-            <>
-              <span className="font-display italic text-xl text-ink">
-                {fmtDate(slice.peak.date, { day: "numeric", month: "short", year: "2-digit" })}
-              </span>
-              <span className="font-mono tabular text-xs text-ink-quiet">
-                {fmtInt(slice.peak.value)} {metricLabel(metric)}
-              </span>
-            </>
-          ) : (
-            <span className="font-display italic text-ink-quiet">—</span>
-          )}
-        </div>
-        <div className="flex flex-col gap-1">
-          <span className="kicker text-ink-mute">Daily mean</span>
-          <span className="font-display italic text-xl text-ink tabular">{fmtInt(dailyAvg)}</span>
-          <span className="font-mono tabular text-xs text-ink-quiet">
-            across {slice.values.length} days
-          </span>
-        </div>
-        <div className="flex flex-col gap-1">
-          <span className="kicker text-ink-mute">Days ≥ {metric === "cases" ? "1,000" : "10"}</span>
-          <span className="font-display italic text-xl text-ink tabular">
-            {fmtInt(slice.daysOverThreshold)}
-          </span>
-          <span className="font-mono tabular text-xs text-ink-quiet">of {slice.values.length}</span>
-        </div>
-      </section>
-
-      <section className="flex flex-col gap-3">
+      {/* II — The curve */}
+      <section className="flex flex-col gap-5">
+        <ChapterMark numeral="II" title="The curve" />
         <div className="flex items-baseline gap-3">
-          <span className="kicker text-ink-mute">Curve</span>
+          <span className="font-display italic text-ink-quiet text-base">
+            Daily {metric}, drawn at hairline weight.
+          </span>
           <span className="flex-1 border-t border-dotted border-rule translate-y-[-0.3rem]" />
           <span className="marginalia">
-            {fmtDate(slice.from, { day: "numeric", month: "short", year: "2-digit" })} —{" "}
-            {fmtDate(slice.to, { day: "numeric", month: "short", year: "2-digit" })}
+            {fmtMonthYearShort(slice.from)} — {fmtMonthYearShort(slice.to)}
           </span>
         </div>
         <HairlineChart
           values={slice.values}
+          height={CHART_HEIGHT}
           highlightIndex={highlight}
           onHighlight={setHighlight}
-          ariaLabel={`Daily ${metric} for ${state}, ${period}`}
+          ariaLabel={`Daily ${metric} for ${state}, ${periodLabel}`}
+          from={slice.from}
+          to={slice.to}
+          events={visibleEvents}
+          primaryLabel={state}
           overlay={overlayProp}
+          hoverFormat={formatHover}
         />
-        <div className="flex items-baseline justify-between min-h-[1.5rem]">
-          <span className="font-mono tabular text-xs text-ink-mute">
-            {highlightDate === null
-              ? ""
-              : fmtDate(highlightDate, { day: "numeric", month: "long", year: "numeric" })}
-          </span>
-          <span className="font-mono tabular text-xs text-ink">
-            {highlightValue === null ? "" : `${fmtInt(highlightValue)} ${state}`}
-            {highlightCompare !== null && compareLabel !== null ? (
-              <span className="text-ink-mute">
-                {" · "}
-                {fmtInt(highlightCompare)} {compareLabel}
-              </span>
-            ) : null}
-          </span>
-        </div>
       </section>
 
+      {/* III — On a particular day */}
       <section className="flex flex-col gap-6">
-        <div className="flex items-baseline gap-3">
-          <span className="kicker text-ink-mute">Set the reading</span>
-          <span className="flex-1 border-t border-rule" />
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <span className="kicker text-ink-mute">Year</span>
-          <YearTabs available={years} value={effectiveYear} onChange={(y) => void setYear(y)} />
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <PandemicStateSelector
-            label="State"
-            value={state}
-            onChange={(s) => void setState(s ?? "Malaysia")}
-            states={dataset.states}
-          />
-          <PandemicStateSelector
-            label="Compare with"
-            value={compare}
-            onChange={(s) => void setCompare(s)}
-            states={otherStates}
-            placeholder="(none)"
-            allowClear
-          />
-        </div>
+        <ChapterMark numeral="III" title="On a particular day" />
+        <OnThisDay dataset={dataset} state={state} />
       </section>
 
-      <OnThisDay dataset={dataset} state={state} />
-
-      <section className="border-t border-rule-soft pt-6 flex flex-col gap-2">
+      <section className="border-t border-rule-soft pt-8 flex flex-col gap-2">
         <span className="kicker text-ink-mute">Source</span>
         <p className="font-display italic text-sm text-ink-quiet leading-relaxed max-w-[58ch]">
-          MoH Malaysia, via{" "}
+          <span className="float-left font-display not-italic font-normal text-[2.5rem] leading-[0.78] text-accent mr-2 mt-[0.2rem] select-none">
+            M
+          </span>
+          oH Malaysia, via{" "}
           <a
             href="https://data.gov.my"
             className="text-accent hover:underline"
