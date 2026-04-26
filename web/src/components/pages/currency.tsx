@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAtom } from "jotai";
 import { Button } from "react-aria-components";
-import { DateTime } from "luxon";
 import { currencyFromAtom, currencyToAtom } from "../../atoms";
 import { useCurrencyRates } from "../../hooks/use-currency-rates";
 import { CurrencyInput } from "../currency-input";
@@ -9,13 +8,14 @@ import { CurrencySelector } from "../currency-selector";
 import { FolioMark, RunningHead } from "../page-frame";
 import { Loading } from "../base/loading";
 import { QueryErrorBoundary } from "../../query/query-provider";
+import { Imprint } from "../imprint";
 
 const DEFAULT_FROM = "USD";
 const DEFAULT_TO = "MYR";
 const FOLIO = "04";
 
 function PageContent() {
-  const { data: rates, isLoading } = useCurrencyRates();
+  const { data: rates, isLoading, dataUpdatedAt } = useCurrencyRates();
   const [from, setFrom] = useAtom(currencyFromAtom);
   const [to, setTo] = useAtom(currencyToAtom);
   const [amount, setAmount] = useState<number | undefined>(1);
@@ -81,11 +81,11 @@ function PageContent() {
   };
 
   const fmt = new Intl.NumberFormat(undefined, { maximumFractionDigits: 4 });
-  const relative = DateTime.fromISO(rates.fetchedAt).toRelative();
 
   return (
     <div className="reveal-stack mx-auto w-full max-w-2xl flex flex-col gap-10">
       <RunningHead section="Currency" folio={FOLIO} />
+      <Imprint setAt={dataUpdatedAt} />
 
       <div className="text-center">
         <div className="kicker text-ink-mute">Currency Exchange</div>
@@ -158,11 +158,6 @@ function PageContent() {
             1 {effectiveFrom} = {fmt.format(rate)} {effectiveTo}
           </span>
         </div>
-        {relative !== null && (
-          <div className="font-display italic text-sm text-ink-mute text-right">
-            rates settled {relative}
-          </div>
-        )}
       </div>
 
       <FolioMark folio={FOLIO} />

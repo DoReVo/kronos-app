@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { DateTime } from "luxon";
 import { TodayParticulars } from "../today-particulars";
+import { InstallCta } from "../install-cta";
 
 const MASTHEAD_STYLE = { fontSize: "clamp(5rem,22vw,15rem)" } as const;
 
@@ -200,7 +201,8 @@ export function ContentsPage() {
         className="mt-20 sm:mt-28 mx-auto w-full max-w-md border-t border-rule"
       />
 
-      <footer className="pt-6 pb-6 text-center text-ink-faint flex flex-col items-center gap-1.5">
+      <footer className="pt-6 pb-6 text-center text-ink-faint flex flex-col items-center gap-3">
+        <InstallCta />
         <div className="kicker flex items-center gap-2">
           <span>·</span>
           <span aria-hidden="true" className="icon-[lucide--asterisk] text-[0.7rem]" />
