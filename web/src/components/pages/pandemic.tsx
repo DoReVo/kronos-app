@@ -2,13 +2,24 @@ import { Fragment, useCallback, useMemo, useState } from "react";
 import { useAtom } from "jotai";
 import { DateTime } from "luxon";
 import {
-  DateField,
+  DatePicker,
   DateInput,
   DateSegment,
+  Group,
+  Dialog,
+  Calendar,
+  CalendarGrid,
+  CalendarGridHeader,
+  CalendarHeaderCell,
+  CalendarGridBody,
+  CalendarCell,
+  Heading,
+  Popover as AriaPopover,
   ToggleButton,
   ToggleButtonGroup,
   Button as AriaButton,
 } from "react-aria-components";
+import cs from "clsx";
 import type { Key } from "react-aria";
 import { parseDate, type CalendarDate } from "@internationalized/date";
 import type { PandemicDataset, PandemicMetric } from "@kronos/common";
@@ -260,7 +271,7 @@ function OnThisDay({ dataset, state }: OnThisDayProps) {
       <div className="font-display italic text-ink-quiet text-base sm:text-lg max-w-[44ch]">
         Where the country stood on a particular day, set against the rest of the record.
       </div>
-      <DateField
+      <DatePicker
         value={date}
         onChange={(d) => {
           if (d !== null) setDate(d);
@@ -270,26 +281,111 @@ function OnThisDay({ dataset, state }: OnThisDayProps) {
         aria-label="Date"
         className="inline-flex"
       >
-        <DateInput
+        <Group
           className={
-            "inline-flex items-baseline gap-px bg-transparent " +
+            "inline-flex items-baseline gap-2 " +
             "border-0 border-b border-rule data-[focus-within]:border-accent data-[focus-within]:border-b-2 " +
-            "font-display italic text-lg text-ink py-2 transition-colors"
+            "py-2 transition-colors"
           }
         >
-          {(segment) => (
-            <DateSegment
-              segment={segment}
-              className={
-                "px-0.5 outline-none tabular " +
-                "data-[type=literal]:text-ink-mute data-[type=literal]:px-0 " +
-                "data-[placeholder]:text-ink-mute data-[placeholder]:italic " +
-                "data-[focused]:bg-accent-soft data-[focused]:text-accent"
-              }
-            />
-          )}
-        </DateInput>
-      </DateField>
+          <DateInput className="inline-flex items-baseline gap-px font-display italic text-lg text-ink">
+            {(segment) => (
+              <DateSegment
+                segment={segment}
+                className={
+                  "px-0.5 outline-none tabular " +
+                  "data-[type=literal]:text-ink-mute data-[type=literal]:px-0 " +
+                  "data-[placeholder]:text-ink-mute data-[placeholder]:italic " +
+                  "data-[focused]:bg-accent-soft data-[focused]:text-accent"
+                }
+              />
+            )}
+          </DateInput>
+          <AriaButton
+            aria-label="Open calendar"
+            className={
+              "text-ink-mute hover:text-accent data-[focus-visible]:text-accent " +
+              "transition-colors cursor-pointer outline-none px-1"
+            }
+          >
+            <span aria-hidden="true" className="icon-[lucide--calendar] text-base" />
+          </AriaButton>
+        </Group>
+        <AriaPopover
+          placement="bottom start"
+          offset={8}
+          className={
+            "bg-paper border border-ink-faint " +
+            "shadow-[0_8px_24px_-12px_rgba(26,22,18,0.18)] rounded-none " +
+            "px-4 py-4"
+          }
+        >
+          <Dialog className="outline-none">
+            <Calendar className="flex flex-col gap-3">
+              <header className="flex items-center justify-between gap-4">
+                <AriaButton
+                  slot="previous"
+                  className={
+                    "text-ink-mute hover:text-accent data-[focus-visible]:text-accent " +
+                    "data-[disabled]:text-ink-faint data-[disabled]:cursor-not-allowed " +
+                    "transition-colors cursor-pointer outline-none p-1"
+                  }
+                >
+                  <span aria-hidden="true" className="icon-[lucide--chevron-left] text-base" />
+                </AriaButton>
+                <Heading className="font-display italic text-base text-ink" />
+                <AriaButton
+                  slot="next"
+                  className={
+                    "text-ink-mute hover:text-accent data-[focus-visible]:text-accent " +
+                    "data-[disabled]:text-ink-faint data-[disabled]:cursor-not-allowed " +
+                    "transition-colors cursor-pointer outline-none p-1"
+                  }
+                >
+                  <span aria-hidden="true" className="icon-[lucide--chevron-right] text-base" />
+                </AriaButton>
+              </header>
+              <CalendarGrid className="border-collapse">
+                <CalendarGridHeader>
+                  {(day) => (
+                    <CalendarHeaderCell className="kicker text-ink-mute pb-2 px-1 text-center">
+                      {day}
+                    </CalendarHeaderCell>
+                  )}
+                </CalendarGridHeader>
+                <CalendarGridBody>
+                  {(d) => (
+                    <CalendarCell
+                      date={d}
+                      className={({
+                        isSelected,
+                        isOutsideMonth,
+                        isUnavailable,
+                        isDisabled,
+                        isFocusVisible,
+                        isHovered,
+                      }) =>
+                        cs(
+                          "h-7 w-9 text-center font-mono tabular text-sm cursor-pointer outline-none transition-colors",
+                          isOutsideMonth
+                            ? "invisible"
+                            : isUnavailable || isDisabled
+                              ? "text-ink-faint cursor-not-allowed"
+                              : isSelected
+                                ? "text-accent border-b border-accent"
+                                : isHovered || isFocusVisible
+                                  ? "text-ink bg-paper-deep"
+                                  : "text-ink-quiet",
+                        )
+                      }
+                    />
+                  )}
+                </CalendarGridBody>
+              </CalendarGrid>
+            </Calendar>
+          </Dialog>
+        </AriaPopover>
+      </DatePicker>
       <div className="grid grid-cols-2 gap-6">
         <div className="flex flex-col">
           <span className="kicker text-ink-mute">Cases</span>
