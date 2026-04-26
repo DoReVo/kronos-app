@@ -14,7 +14,7 @@ const SETTING_DATE = DateTime.fromISO(__BUILD_DATE__).toLocaleString({
 
 interface Entry {
   kind: "live";
-  to: "/prayer-time" | "/currency";
+  to: "/prayer-time" | "/currency" | "/pandemic";
   title: string;
   tagline: string;
   folio: string;
@@ -53,6 +53,13 @@ const sections: Section[] = [
         title: "Currency Converter",
         tagline: "Live foreign exchange rates against the United States dollar.",
         folio: "04",
+      },
+      {
+        kind: "live",
+        to: "/pandemic",
+        title: "SARS-CoV-2, Malaysia",
+        tagline: "A standing record of cases and deaths, drawn from MoH’s linelists.",
+        folio: "06",
       },
       {
         kind: "forthcoming",
