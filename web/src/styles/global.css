@@ -10,6 +10,7 @@
   --font-mono: "PP Fraktion Mono", "JetBrains Mono", ui-monospace, monospace;
 
   --color-paper: #f4ede0;
+  --color-paper-2: #ede4d3;
   --color-paper-deep: #ebe2d2;
   --color-ink: #1a1612;
   --color-ink-soft: #1a16120d;
@@ -28,6 +29,7 @@
 @layer base {
   :root.dark {
     --color-paper: #161310;
+    --color-paper-2: #1c1814;
     --color-paper-deep: #1f1a14;
     --color-ink: #efe6d4;
     --color-ink-soft: #efe6d40d;
@@ -63,6 +65,10 @@
     background-size: 320px 320px;
     background-blend-mode: multiply;
     min-height: 100vh;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
   }
 
   :root.dark body {

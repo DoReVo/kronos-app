@@ -1,5 +1,5 @@
 import { useAtomValue } from "jotai";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { DateTime } from "luxon";
 import type { PrayerTime } from "@kronos/common";
 import { methodAtom } from "../../atoms";
@@ -9,9 +9,11 @@ import { ZoneSelector } from "../ZoneSelector";
 import { Switch } from "../base/Switch";
 import { QueryErrorBoundary } from "../../query/query-provider";
 import { useAutoPrayerTime, useManualPrayerTime } from "../../hooks/use-prayer-time";
+import { useNow } from "../../hooks/use-now";
 import { TimeCard } from "../time-card";
 import { Loading } from "../base/loading";
 import { FolioMark, RunningHead } from "../page-frame";
+import { Imprint } from "../imprint";
 
 const HERO_TIME_STYLE = { fontSize: "clamp(5rem,17vw,9rem)" } as const;
 const EMPTY_ENTRIES: PrayerEntry[] = [];
@@ -35,18 +37,6 @@ interface PrayerEntry {
   display: string;
   isPast: boolean;
   isNext: boolean;
-}
-
-function useTick() {
-  const [, setTick] = useState(0);
-  useEffect(() => {
-    const id = window.setInterval(() => {
-      setTick((t) => t + 1);
-    }, 30_000);
-    return () => {
-      window.clearInterval(id);
-    };
-  }, []);
 }
 
 function buildEntries(data: PrayerTime, now: DateTime): PrayerEntry[] {
@@ -127,15 +117,22 @@ function PrayerList({ entries }: ListProps) {
 function PageContent() {
   const method = useAtomValue(methodAtom);
   const [useAdjustment, setUseAdjustment] = useState(false);
-  useTick();
+  const now = useNow();
 
-  const { data: autoData, isLoading: autoLoading } = useAutoPrayerTime(useAdjustment);
-  const { data: manualData, isLoading: manualLoading } = useManualPrayerTime();
+  const {
+    data: autoData,
+    isLoading: autoLoading,
+    dataUpdatedAt: autoUpdatedAt,
+  } = useAutoPrayerTime(useAdjustment);
+  const {
+    data: manualData,
+    isLoading: manualLoading,
+    dataUpdatedAt: manualUpdatedAt,
+  } = useManualPrayerTime();
 
   const data = method === "auto" ? autoData : manualData;
   const isLoading = method === "auto" ? autoLoading : manualLoading;
-
-  const now = DateTime.now();
+  const updatedAt = method === "auto" ? autoUpdatedAt : manualUpdatedAt;
   const entries = useMemo(() => (data === undefined ? null : buildEntries(data, now)), [data, now]);
   const hero = entries?.find((e) => e.isNext) ?? null;
   const others = useMemo(
@@ -153,6 +150,7 @@ function PageContent() {
   return (
     <div className="reveal-stack mx-auto w-full max-w-2xl flex flex-col gap-8">
       <RunningHead section="Prayer Time" folio={FOLIO} />
+      <Imprint setAt={updatedAt} />
 
       <div className="text-center">
         <div className="kicker text-ink-mute">Daily Observance</div>

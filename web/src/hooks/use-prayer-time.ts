@@ -17,7 +17,6 @@ export function useAutoPrayerTime(useAdjustment: boolean) {
     queryKey: ["time", "auto", _today, useAdjustment],
     retry: 1,
     retryDelay: 500,
-    refetchInterval: 30000,
     enabled: latLong[0] !== null && latLong[1] !== null && method === "auto",
     queryFn: () =>
       ky
@@ -42,7 +41,6 @@ export function useManualPrayerTime() {
     queryKey: ["time", "manual", zone],
     retry: 1,
     retryDelay: 500,
-    refetchInterval: 30000,
     enabled: zone !== null && method === "manual",
     queryFn: () =>
       ky
