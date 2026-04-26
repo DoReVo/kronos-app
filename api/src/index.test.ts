@@ -247,6 +247,33 @@ describe("GET /time/manual: upstream + KV cache", () => {
     expect(await env.kronos.get("JHR01-2026")).not.toBeNull();
   });
 
+  it.each([
+    ["midnight KL", "2025-06-15T00:00:00+08:00"],
+    ["mid-afternoon KL", "2025-06-15T15:00:00+08:00"],
+    ["just before midnight KL", "2025-06-15T23:59:00+08:00"],
+    ["UTC ISO same KL day", "2025-06-15T07:00:00Z"],
+    ["non-KL offset same KL day", "2025-06-15T00:00:00-07:00"],
+  ] as const)("resolves %s to the same JAKIM day's entry", async (_label, date) => {
+    stubUpstream();
+    const seeded = [
+      {
+        date: "2025-06-14T00:00:00.000Z",
+        imsak: "2025-06-14T21:42:00.000Z",
+        subuh: "2025-06-14T21:52:00.000Z",
+        syuruk: "2025-06-14T23:15:00.000Z",
+        zohor: "2025-06-15T05:15:00.000Z",
+        asar: "2025-06-15T08:39:00.000Z",
+        maghrib: "2025-06-15T11:13:00.000Z",
+        isyak: "2025-06-15T12:28:00.000Z",
+      },
+    ];
+    await env.kronos.put("JHR01-2025", JSON.stringify(seeded));
+
+    const res = await exports.default.fetch(url("/time/manual", { date, zone: "JHR01" }));
+    expect(res.status).toBe(200);
+    await expect(res.json()).resolves.toEqual(seeded[0]);
+  });
+
   it("returns 404 when the requested date is not in the cached year", async () => {
     stubUpstream();
     await env.kronos.put("JHR01-2025", JSON.stringify([]));
