@@ -1,8 +1,9 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { dateTimeToCommonDay, isoToCommonDateTime, ZONE_OPTIONS, ZoneSchema } from "@kronos/common";
+import { ZONE_OPTIONS, ZoneSchema } from "@kronos/common";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
+import { DateTime } from "luxon";
 import { CustomTimeProvider } from "./lib/time";
 import { JakimProvider } from "./lib/jakim";
 import { ExchangeRateProvider } from "./lib/exchange-rate";
@@ -69,13 +70,18 @@ server.get(
   async (c) => {
     const { date, zone } = c.req.valid("query");
 
-    let datetime = isoToCommonDateTime(date);
+    // Resolve the request to "which JAKIM day does this instant fall in, in
+    // Asia/KL." Cache keys are KL-midnight expressed as the corresponding
+    // UTC instant then floored to UTC startOf("day") (see jakim.ts).
+    const datetime = DateTime.fromISO(date, { setZone: true })
+      .setZone("Asia/Kuala_Lumpur")
+      .startOf("day")
+      .setZone("UTC")
+      .startOf("day");
 
-    if (!datetime) {
+    if (!datetime.isValid) {
       throw new Error("Invalid date given");
     }
-
-    datetime = dateTimeToCommonDay(datetime);
 
     const time = new JakimProvider();
     const res = await time.getTimeForDay(datetime, zone);
