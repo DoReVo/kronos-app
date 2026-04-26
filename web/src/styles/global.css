@@ -202,10 +202,3 @@
   }
 }
 
-input.kronos-bare-date::-webkit-calendar-picker-indicator {
-  display: none;
-}
-input.kronos-bare-date::-webkit-inner-spin-button,
-input.kronos-bare-date::-webkit-clear-button {
-  display: none;
-}

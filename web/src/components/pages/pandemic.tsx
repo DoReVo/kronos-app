@@ -1,6 +1,16 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useMemo, useState } from "react";
 import { useAtom } from "jotai";
 import { DateTime } from "luxon";
+import {
+  DateField,
+  DateInput,
+  DateSegment,
+  ToggleButton,
+  ToggleButtonGroup,
+  Button as AriaButton,
+} from "react-aria-components";
+import type { Key } from "react-aria";
+import { parseDate, type CalendarDate } from "@internationalized/date";
 import type { PandemicDataset, PandemicMetric } from "@kronos/common";
 import { pandemicCompareAtom, pandemicStateAtom, pandemicYearAtom } from "../../atoms";
 import { usePandemic } from "../../hooks/use-pandemic";
@@ -8,7 +18,7 @@ import { Loading } from "../base/loading";
 import { FolioMark, RunningHead } from "../page-frame";
 import { Imprint } from "../imprint";
 import { QueryErrorBoundary } from "../../query/query-provider";
-import { InlinePicker, PickerListItem } from "../inline-picker";
+import { InlinePicker, type InlinePickerItem } from "../inline-picker";
 import { HairlineChart } from "../hairline-chart";
 import { addDays, dayDiff, pickYears, sliceSeries } from "../../lib/pandemic-slice";
 
@@ -18,6 +28,7 @@ const METRIC_STYLE = { fontSize: "clamp(1.75rem,4.5vw,2.5rem)" } as const;
 const CASES_THRESHOLD = 1000;
 const DEATHS_THRESHOLD = 10;
 const CHART_HEIGHT = 320;
+const DEFAULT_LOOKUP_DATE = "2021-08-26";
 
 const NAMED_EVENTS: { date: string; label: string }[] = [
   { date: "2020-03-18", label: "MCO begins" },
@@ -25,6 +36,12 @@ const NAMED_EVENTS: { date: string; label: string }[] = [
   { date: "2021-08-26", label: "delta peak" },
   { date: "2022-04-01", label: "endemic transition" },
 ];
+
+const METRIC_OPTIONS: readonly PandemicMetric[] = ["cases", "deaths"] as const;
+
+function isMetric(v: unknown): v is PandemicMetric {
+  return v === "cases" || v === "deaths";
+}
 
 function fmtInt(n: number): string {
   return new Intl.NumberFormat("en-US").format(Math.round(n));
@@ -38,6 +55,12 @@ function fmtDate(iso: string, opts?: Intl.DateTimeFormatOptions): string {
 
 function fmtMonthYearShort(iso: string): string {
   return DateTime.fromISO(iso).toLocaleString({ day: "numeric", month: "short", year: "numeric" });
+}
+
+function clampIso(iso: string, min: string, max: string): string {
+  if (iso < min) return min;
+  if (iso > max) return max;
+  return iso;
 }
 
 interface ChapterMarkProps {
@@ -60,40 +83,41 @@ interface MetricToggleProps {
 }
 
 function MetricToggle({ value, onChange }: MetricToggleProps) {
+  const selectedKeys = useMemo(() => new Set<Key>([value]), [value]);
   return (
-    <div className="flex items-baseline gap-6 select-none">
-      <button
-        type="button"
-        onClick={() => {
-          onChange("cases");
-        }}
-        className={
-          value === "cases"
-            ? "font-display italic text-ink border-b-2 border-accent pb-1 transition-colors cursor-pointer"
-            : "font-display italic text-ink-quiet hover:text-accent transition-colors cursor-pointer"
-        }
-        style={METRIC_STYLE}
-      >
-        cases
-      </button>
-      <span aria-hidden="true" className="text-ink-faint text-2xl">
-        ·
-      </span>
-      <button
-        type="button"
-        onClick={() => {
-          onChange("deaths");
-        }}
-        className={
-          value === "deaths"
-            ? "font-display italic text-ink border-b-2 border-accent pb-1 transition-colors cursor-pointer"
-            : "font-display italic text-ink-quiet hover:text-accent transition-colors cursor-pointer"
-        }
-        style={METRIC_STYLE}
-      >
-        deaths
-      </button>
-    </div>
+    <ToggleButtonGroup
+      selectionMode="single"
+      disallowEmptySelection
+      selectedKeys={selectedKeys}
+      onSelectionChange={(keys) => {
+        const [next] = keys;
+        if (isMetric(next)) onChange(next);
+      }}
+      aria-label="Metric"
+      className="flex items-baseline gap-6 select-none"
+    >
+      {METRIC_OPTIONS.map((m, i) => (
+        <Fragment key={m}>
+          {i > 0 && (
+            <span aria-hidden="true" className="text-ink-faint text-2xl">
+              ·
+            </span>
+          )}
+          <ToggleButton
+            id={m}
+            className={
+              "font-display italic transition-colors cursor-pointer outline-none " +
+              "text-ink-quiet hover:text-accent " +
+              "data-[focus-visible]:text-accent " +
+              "data-[selected]:text-ink data-[selected]:border-b-2 data-[selected]:border-accent data-[selected]:pb-1"
+            }
+            style={METRIC_STYLE}
+          >
+            {m}
+          </ToggleButton>
+        </Fragment>
+      ))}
+    </ToggleButtonGroup>
   );
 }
 
@@ -105,30 +129,19 @@ interface YearPickerProps {
 }
 
 function YearPicker({ available, value, onChange, label }: YearPickerProps) {
-  const all: { key: string; label: string }[] = [
-    { key: "all", label: "all years" },
-    ...available.map((y) => ({ key: y, label: y })),
-  ];
+  const items = useMemo<InlinePickerItem[]>(
+    () => [{ key: "all", label: "all years" }, ...available.map((y) => ({ key: y, label: y }))],
+    [available],
+  );
   return (
-    <InlinePicker label={label}>
-      {(close) => (
-        <div className="flex flex-col">
-          <div className="kicker text-ink-mute mb-2">Year</div>
-          {all.map((t) => (
-            <PickerListItem
-              key={t.key}
-              selected={t.key === value}
-              onPress={() => {
-                onChange(t.key);
-                close();
-              }}
-            >
-              {t.label}
-            </PickerListItem>
-          ))}
-        </div>
-      )}
-    </InlinePicker>
+    <InlinePicker
+      trigger={label}
+      ariaLabel="Year"
+      header="Year"
+      items={items}
+      selectedKey={value}
+      onAction={onChange}
+    />
   );
 }
 
@@ -139,26 +152,19 @@ interface StatePickerProps {
 }
 
 function StatePicker({ states, value, onChange }: StatePickerProps) {
+  const items = useMemo<InlinePickerItem[]>(
+    () => states.map((s) => ({ key: s, label: s })),
+    [states],
+  );
   return (
-    <InlinePicker label={value}>
-      {(close) => (
-        <div className="flex flex-col">
-          <div className="kicker text-ink-mute mb-2">State</div>
-          {states.map((s) => (
-            <PickerListItem
-              key={s}
-              selected={s === value}
-              onPress={() => {
-                onChange(s);
-                close();
-              }}
-            >
-              {s}
-            </PickerListItem>
-          ))}
-        </div>
-      )}
-    </InlinePicker>
+    <InlinePicker
+      trigger={value}
+      ariaLabel="State"
+      header="State"
+      items={items}
+      selectedKey={value}
+      onAction={onChange}
+    />
   );
 }
 
@@ -169,70 +175,45 @@ interface CompareSlotProps {
 }
 
 function CompareSlot({ states, value, onChange }: CompareSlotProps) {
+  const items = useMemo<InlinePickerItem[]>(
+    () => states.map((s) => ({ key: s, label: s })),
+    [states],
+  );
   if (value === null) {
     return (
-      <InlinePicker label="+ alongside another state">
-        {(close) => (
-          <div className="flex flex-col">
-            <div className="kicker text-ink-mute mb-2">Compare with</div>
-            {states.map((s) => (
-              <PickerListItem
-                key={s}
-                selected={false}
-                onPress={() => {
-                  onChange(s);
-                  close();
-                }}
-              >
-                {s}
-              </PickerListItem>
-            ))}
-          </div>
-        )}
-      </InlinePicker>
+      <InlinePicker
+        trigger="+ alongside another state"
+        ariaLabel="Compare with"
+        header="Compare with"
+        items={items}
+        onAction={(key) => {
+          onChange(key);
+        }}
+      />
     );
   }
   return (
     <span className="font-display italic text-ink-quiet inline-flex items-baseline gap-2">
       <span>alongside</span>
-      <InlinePicker label={value}>
-        {(close) => (
-          <div className="flex flex-col">
-            <div className="kicker text-ink-mute mb-2">Compare with</div>
-            <PickerListItem
-              selected={false}
-              onPress={() => {
-                onChange(null);
-                close();
-              }}
-            >
-              (none)
-            </PickerListItem>
-            {states.map((s) => (
-              <PickerListItem
-                key={s}
-                selected={s === value}
-                onPress={() => {
-                  onChange(s);
-                  close();
-                }}
-              >
-                {s}
-              </PickerListItem>
-            ))}
-          </div>
-        )}
-      </InlinePicker>
-      <button
-        type="button"
-        onClick={() => {
+      <InlinePicker
+        trigger={value}
+        ariaLabel="Compare with"
+        header="Compare with"
+        items={items}
+        selectedKey={value}
+        onAction={(key) => {
+          onChange(key);
+        }}
+      />
+      <AriaButton
+        onPress={() => {
           onChange(null);
         }}
-        className="kicker text-ink-faint hover:text-accent transition-colors cursor-pointer"
+        className="kicker text-ink-faint hover:text-accent transition-colors cursor-pointer outline-none data-[focus-visible]:text-accent"
         aria-label="Clear comparison"
       >
         ×
-      </button>
+      </AriaButton>
     </span>
   );
 }
@@ -246,18 +227,24 @@ function OnThisDay({ dataset, state }: OnThisDayProps) {
   const minDate =
     dataset.cases.from < dataset.deaths.from ? dataset.cases.from : dataset.deaths.from;
   const maxDate = dataset.cases.to > dataset.deaths.to ? dataset.cases.to : dataset.deaths.to;
-  const inputRef = useRef<HTMLInputElement | null>(null);
 
-  const [date, setDate] = useState<string>("2021-08-26");
+  const minCal = useMemo(() => parseDate(minDate), [minDate]);
+  const maxCal = useMemo(() => parseDate(maxDate), [maxDate]);
+  const initialIso = useMemo(
+    () => clampIso(DEFAULT_LOOKUP_DATE, minDate, maxDate),
+    [minDate, maxDate],
+  );
 
-  const valid = date >= minDate && date <= maxDate;
-  const casesIdx = dayDiff(dataset.cases.from, date);
-  const deathsIdx = dayDiff(dataset.deaths.from, date);
+  const [date, setDate] = useState<CalendarDate>(() => parseDate(initialIso));
+  const dateIso = date.toString();
+
+  const casesIdx = dayDiff(dataset.cases.from, dateIso);
+  const deathsIdx = dayDiff(dataset.deaths.from, dateIso);
   const casesValues = dataset.cases.byState[state];
   const deathsValues = dataset.deaths.byState[state];
 
-  const inCasesRange = valid && date >= dataset.cases.from && date <= dataset.cases.to;
-  const inDeathsRange = valid && date >= dataset.deaths.from && date <= dataset.deaths.to;
+  const inCasesRange = dateIso >= dataset.cases.from && dateIso <= dataset.cases.to;
+  const inDeathsRange = dateIso >= dataset.deaths.from && dateIso <= dataset.deaths.to;
 
   const casesValue =
     inCasesRange && casesValues !== undefined && casesIdx >= 0 && casesIdx < casesValues.length
@@ -268,72 +255,65 @@ function OnThisDay({ dataset, state }: OnThisDayProps) {
       ? (deathsValues[deathsIdx] ?? 0)
       : null;
 
-  const openPicker = () => {
-    const el = inputRef.current;
-    if (el && typeof el.showPicker === "function") {
-      el.showPicker();
-    } else {
-      el?.focus();
-    }
-  };
-
   return (
     <section className="flex flex-col gap-6">
       <div className="font-display italic text-ink-quiet text-base sm:text-lg max-w-[44ch]">
         Where the country stood on a particular day, set against the rest of the record.
       </div>
-      <div className="relative inline-flex items-baseline gap-3 max-w-xs">
-        <input
-          ref={inputRef}
-          type="date"
-          value={date}
-          min={minDate}
-          max={maxDate}
-          onChange={(e) => {
-            setDate(e.target.value);
-          }}
-          className="kronos-bare-date bg-transparent border-0 border-b border-rule focus:border-accent focus:border-b-2 outline-none font-display italic text-lg text-ink py-2 px-0 transition-colors flex-1"
-        />
-        <button
-          type="button"
-          onClick={openPicker}
-          className="text-ink-mute hover:text-accent transition-colors cursor-pointer"
-          aria-label="Open date picker"
+      <DateField
+        value={date}
+        onChange={(d) => {
+          if (d !== null) setDate(d);
+        }}
+        minValue={minCal}
+        maxValue={maxCal}
+        aria-label="Date"
+        className="inline-flex"
+      >
+        <DateInput
+          className={
+            "inline-flex items-baseline gap-px bg-transparent " +
+            "border-0 border-b border-rule data-[focus-within]:border-accent data-[focus-within]:border-b-2 " +
+            "font-display italic text-lg text-ink py-2 transition-colors"
+          }
         >
-          <span aria-hidden="true" className="icon-[lucide--calendar] text-base" />
-        </button>
+          {(segment) => (
+            <DateSegment
+              segment={segment}
+              className={
+                "px-0.5 outline-none tabular " +
+                "data-[type=literal]:text-ink-mute data-[type=literal]:px-0 " +
+                "data-[placeholder]:text-ink-mute data-[placeholder]:italic " +
+                "data-[focused]:bg-accent-soft data-[focused]:text-accent"
+              }
+            />
+          )}
+        </DateInput>
+      </DateField>
+      <div className="grid grid-cols-2 gap-6">
+        <div className="flex flex-col">
+          <span className="kicker text-ink-mute">Cases</span>
+          <span className="font-display italic text-3xl sm:text-4xl text-ink tabular mt-1">
+            {casesValue === null ? "—" : fmtInt(casesValue)}
+          </span>
+          {!inCasesRange && (
+            <span className="marginalia mt-1">
+              cases record ended {fmtMonthYearShort(dataset.cases.to)}
+            </span>
+          )}
+        </div>
+        <div className="flex flex-col">
+          <span className="kicker text-ink-mute">Deaths</span>
+          <span className="font-display italic text-3xl sm:text-4xl text-ink tabular mt-1">
+            {deathsValue === null ? "—" : fmtInt(deathsValue)}
+          </span>
+          {!inDeathsRange && (
+            <span className="marginalia mt-1">
+              deaths record ended {fmtMonthYearShort(dataset.deaths.to)}
+            </span>
+          )}
+        </div>
       </div>
-      {!valid && (
-        <div className="font-display italic text-ink-quiet">
-          The record does not extend to that day.
-        </div>
-      )}
-      {valid && (
-        <div className="grid grid-cols-2 gap-6">
-          <div className="flex flex-col">
-            <span className="kicker text-ink-mute">Cases</span>
-            <span className="font-display italic text-3xl sm:text-4xl text-ink tabular mt-1">
-              {casesValue === null ? "—" : fmtInt(casesValue)}
-            </span>
-            {!inCasesRange && (
-              <span className="marginalia mt-1">
-                cases record ended {fmtMonthYearShort(dataset.cases.to)}
-              </span>
-            )}
-          </div>
-          <div className="flex flex-col">
-            <span className="kicker text-ink-mute">Deaths</span>
-            <span className="font-display italic text-3xl sm:text-4xl text-ink tabular mt-1">
-              {deathsValue === null ? "—" : fmtInt(deathsValue)}
-            </span>
-            {!inDeathsRange && (
-              <span className="marginalia mt-1">
-                deaths record ended {fmtMonthYearShort(dataset.deaths.to)}
-              </span>
-            )}
-          </div>
-        </div>
-      )}
     </section>
   );
 }
@@ -357,7 +337,7 @@ function PageContent() {
     () => (series === null ? null : sliceSeries(series, state, effectiveYear, threshold)),
     [series, state, effectiveYear, threshold],
   );
-  const effectiveCompare = compare !== null && compare !== "" && compare !== state ? compare : null;
+  const effectiveCompare = compare !== null && compare !== state ? compare : null;
   const compareSlice = useMemo(
     () =>
       series !== null && effectiveCompare !== null

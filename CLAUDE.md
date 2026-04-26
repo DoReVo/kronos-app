@@ -16,6 +16,8 @@ npm workspaces + Turbo. Three packages:
 - `api` — Cloudflare Worker (Hono) on KV cache; serves `/time/auto`, `/time/manual`, `/currency/rates`
 - `web` — Vite + React 19 PWA; jotai + IndexedDB for prefs
 
+- Use react aria for UI components - <https://react-aria.adobe.com/llms.txt> (Replace llms.txt with the component path)
+
 ## Footguns
 
 - **JAKIM date off-by-one**: pass KL-offset ISO (`...+08:00`) for `/time/manual`, not UTC midnight — JAKIM dates parsed in Asia/KL then converted to UTC start-of-day land on the previous calendar day.

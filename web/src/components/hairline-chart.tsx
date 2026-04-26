@@ -26,8 +26,6 @@ const PADDING_BOTTOM = 22;
 const PADDING_RIGHT = 80;
 const ANNOTATION_OFFSET = 12;
 
-const CURSOR_CROSSHAIR_STYLE = { cursor: "crosshair" } as const;
-const CURSOR_DEFAULT_STYLE = { cursor: "default" } as const;
 const ENDLABEL_STYLE = { letterSpacing: "0.08em", textTransform: "uppercase" } as const;
 const YEARLABEL_STYLE = { letterSpacing: "0.06em" } as const;
 const noop = (): void => {};
@@ -263,8 +261,7 @@ export function HairlineChart({
 
   const handleMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!onHighlight || values.length === 0) return;
-    const rect = containerRef.current?.getBoundingClientRect();
-    if (!rect) return;
+    const rect = e.currentTarget.getBoundingClientRect();
     const ratio = (e.clientX - rect.left) / Math.max(1, plotWidth);
     const i = Math.max(0, Math.min(values.length - 1, Math.round(ratio * (values.length - 1))));
     onHighlight(i);
@@ -273,6 +270,16 @@ export function HairlineChart({
   const handleLeave = () => {
     if (onHighlight) onHighlight(null);
   };
+
+  const overlayStyle = useMemo(
+    () => ({
+      top: PADDING_TOP,
+      bottom: PADDING_BOTTOM,
+      right: PADDING_RIGHT,
+      cursor: onHighlight ? ("crosshair" as const) : ("default" as const),
+    }),
+    [onHighlight],
+  );
 
   const highlightX =
     highlightIndex !== undefined && highlightIndex !== null && values.length > 1
@@ -450,12 +457,14 @@ export function HairlineChart({
         />
       )}
 
-      {/* pointer capture overlay */}
+      {/* pointer capture overlay — tracks the plot area only */}
       <div
-        className="absolute inset-0"
+        className="absolute left-0"
         onPointerMove={handleMove}
         onPointerLeave={handleLeave}
-        style={onHighlight ? CURSOR_CROSSHAIR_STYLE : CURSOR_DEFAULT_STYLE}
+        onPointerCancel={handleLeave}
+        onPointerUp={handleLeave}
+        style={overlayStyle}
       />
     </div>
   );
