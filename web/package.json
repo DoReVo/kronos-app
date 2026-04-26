@@ -36,7 +36,7 @@
     "@iconify/tailwind4": "^1.2.3",
     "@tailwindcss/vite": "^4.2.4",
     "@tanstack/react-router-devtools": "^1.114.3",
-    "@tanstack/router-plugin": "^1.114.3",
+    "@tanstack/router-plugin": "^1.167.27",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vite-pwa/assets-generator": "^1.0.2",
