@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import {
   Button as AriaButton,
   Header as AriaHeader,
@@ -6,6 +7,7 @@ import {
   MenuTrigger,
   Popover as AriaPopover,
 } from "react-aria-components";
+import type { Key, Selection } from "react-aria-components";
 import cs from "clsx";
 
 export interface InlinePickerItem {
@@ -19,7 +21,7 @@ interface InlinePickerProps {
   header?: string;
   items: InlinePickerItem[];
   selectedKey?: string | null;
-  onAction: (key: string) => void;
+  onSelect: (key: string) => void;
   className?: string;
 }
 
@@ -45,15 +47,46 @@ const headerStyle = cs(["kicker text-ink-mute mb-2 block"]);
 
 const menuStyle = cs(["outline-none flex flex-col"]);
 
+const itemStyle = ({
+  isHovered,
+  isFocused,
+  isSelected,
+}: {
+  isHovered: boolean;
+  isFocused: boolean;
+  isSelected: boolean;
+}): string =>
+  cs([
+    "block w-full text-left px-2 py-1 transition-colors cursor-pointer outline-none",
+    "font-body text-sm",
+    "border-l-2",
+    isSelected
+      ? "text-accent border-accent pl-1.5"
+      : cs([
+          "border-transparent",
+          isHovered || isFocused ? "text-ink bg-paper-deep" : "text-ink-quiet",
+        ]),
+  ]);
+
 export function InlinePicker({
   trigger,
   ariaLabel,
   header,
   items,
   selectedKey,
-  onAction,
+  onSelect,
   className,
 }: InlinePickerProps) {
+  const selectedKeys = useMemo<Iterable<Key>>(
+    () => (selectedKey === null || selectedKey === undefined ? [] : [selectedKey]),
+    [selectedKey],
+  );
+  const handleChange = (keys: Selection): void => {
+    if (keys === "all") return;
+    const [first] = keys;
+    if (typeof first === "string") onSelect(first);
+  };
+
   return (
     <MenuTrigger>
       <AriaButton className={cs(triggerStyle, className)}>{trigger}</AriaButton>
@@ -62,36 +95,16 @@ export function InlinePicker({
         <AriaMenu
           aria-label={ariaLabel}
           className={menuStyle}
-          onAction={(key) => {
-            onAction(String(key));
-          }}
+          selectionMode="single"
+          disallowEmptySelection
+          selectedKeys={selectedKeys}
+          onSelectionChange={handleChange}
         >
-          {items.map((item) => {
-            const isCurrent =
-              selectedKey !== null && selectedKey !== undefined && item.key === selectedKey;
-            return (
-              <AriaMenuItem
-                key={item.key}
-                id={item.key}
-                textValue={item.label}
-                className={({ isHovered, isFocused }) =>
-                  cs(
-                    "block w-full text-left px-2 py-1 transition-colors cursor-pointer outline-none",
-                    "font-body text-sm",
-                    "border-l-2",
-                    isCurrent
-                      ? "text-accent border-accent pl-1.5"
-                      : cs(
-                          "border-transparent",
-                          isHovered || isFocused ? "text-ink bg-paper-deep" : "text-ink-quiet",
-                        ),
-                  )
-                }
-              >
-                {item.label}
-              </AriaMenuItem>
-            );
-          })}
+          {items.map((item) => (
+            <AriaMenuItem key={item.key} id={item.key} textValue={item.label} className={itemStyle}>
+              {item.label}
+            </AriaMenuItem>
+          ))}
         </AriaMenu>
       </AriaPopover>
     </MenuTrigger>

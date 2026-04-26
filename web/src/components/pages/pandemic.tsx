@@ -116,12 +116,12 @@ function MetricToggle({ value, onChange }: MetricToggleProps) {
           )}
           <ToggleButton
             id={m}
-            className={
-              "font-display italic transition-colors cursor-pointer outline-none " +
-              "text-ink-quiet hover:text-accent " +
-              "data-[focus-visible]:text-accent " +
-              "data-[selected]:text-ink data-[selected]:border-b-2 data-[selected]:border-accent data-[selected]:pb-1"
-            }
+            className={cs([
+              "font-display italic transition-colors cursor-pointer outline-none",
+              "text-ink-quiet hover:text-accent",
+              "data-[focus-visible]:text-accent",
+              "data-[selected]:text-ink data-[selected]:border-b-2 data-[selected]:border-accent data-[selected]:pb-1",
+            ])}
             style={METRIC_STYLE}
           >
             {m}
@@ -151,7 +151,7 @@ function YearPicker({ available, value, onChange, label }: YearPickerProps) {
       header="Year"
       items={items}
       selectedKey={value}
-      onAction={onChange}
+      onSelect={onChange}
     />
   );
 }
@@ -174,7 +174,7 @@ function StatePicker({ states, value, onChange }: StatePickerProps) {
       header="State"
       items={items}
       selectedKey={value}
-      onAction={onChange}
+      onSelect={onChange}
     />
   );
 }
@@ -197,7 +197,7 @@ function CompareSlot({ states, value, onChange }: CompareSlotProps) {
         ariaLabel="Compare with"
         header="Compare with"
         items={items}
-        onAction={(key) => {
+        onSelect={(key) => {
           onChange(key);
         }}
       />
@@ -212,7 +212,7 @@ function CompareSlot({ states, value, onChange }: CompareSlotProps) {
         header="Compare with"
         items={items}
         selectedKey={value}
-        onAction={(key) => {
+        onSelect={(key) => {
           onChange(key);
         }}
       />
@@ -226,6 +226,52 @@ function CompareSlot({ states, value, onChange }: CompareSlotProps) {
         ×
       </AriaButton>
     </span>
+  );
+}
+
+const dateGroupStyle = cs([
+  "inline-flex items-baseline gap-2",
+  "border-0 border-b border-rule data-[focus-within]:border-accent data-[focus-within]:border-b-2",
+  "py-2 transition-colors",
+]);
+
+const dateSegmentStyle = cs([
+  "px-0.5 outline-none tabular",
+  "data-[type=literal]:text-ink-mute data-[type=literal]:px-0",
+  "data-[placeholder]:text-ink-mute data-[placeholder]:italic",
+  "data-[focused]:bg-accent-soft data-[focused]:text-accent",
+]);
+
+const dateTriggerStyle = cs([
+  "text-ink-mute hover:text-accent data-[focus-visible]:text-accent",
+  "transition-colors cursor-pointer outline-none px-1",
+]);
+
+const datePopoverStyle = cs([
+  "bg-paper border border-ink-faint",
+  "shadow-[0_8px_24px_-12px_rgba(26,22,18,0.18)] rounded-none",
+  "px-4 py-4",
+]);
+
+const calendarNavStyle = cs([
+  "text-ink-mute hover:text-accent data-[focus-visible]:text-accent",
+  "data-[disabled]:text-ink-faint data-[disabled]:cursor-not-allowed",
+  "transition-colors cursor-pointer outline-none p-1",
+]);
+
+const CALENDAR_CELL_BASE =
+  "h-7 w-9 text-center font-mono tabular text-sm outline-none transition-colors";
+
+interface CalendarNavButtonProps {
+  slot: "previous" | "next";
+  icon: string;
+}
+
+function CalendarNavButton({ slot, icon }: CalendarNavButtonProps) {
+  return (
+    <AriaButton slot={slot} className={calendarNavStyle}>
+      <span aria-hidden="true" className={cs([icon, "text-base"])} />
+    </AriaButton>
   );
 }
 
@@ -274,76 +320,28 @@ function OnThisDay({ dataset, state }: OnThisDayProps) {
       <DatePicker
         value={date}
         onChange={(d) => {
+          // Calendar always shows a date; ignore null (e.g. invalid clears).
           if (d !== null) setDate(d);
         }}
         minValue={minCal}
         maxValue={maxCal}
         aria-label="Date"
-        className="inline-flex"
       >
-        <Group
-          className={
-            "inline-flex items-baseline gap-2 " +
-            "border-0 border-b border-rule data-[focus-within]:border-accent data-[focus-within]:border-b-2 " +
-            "py-2 transition-colors"
-          }
-        >
+        <Group className={dateGroupStyle}>
           <DateInput className="inline-flex items-baseline gap-px font-display italic text-lg text-ink">
-            {(segment) => (
-              <DateSegment
-                segment={segment}
-                className={
-                  "px-0.5 outline-none tabular " +
-                  "data-[type=literal]:text-ink-mute data-[type=literal]:px-0 " +
-                  "data-[placeholder]:text-ink-mute data-[placeholder]:italic " +
-                  "data-[focused]:bg-accent-soft data-[focused]:text-accent"
-                }
-              />
-            )}
+            {(segment) => <DateSegment segment={segment} className={dateSegmentStyle} />}
           </DateInput>
-          <AriaButton
-            aria-label="Open calendar"
-            className={
-              "text-ink-mute hover:text-accent data-[focus-visible]:text-accent " +
-              "transition-colors cursor-pointer outline-none px-1"
-            }
-          >
+          <AriaButton className={dateTriggerStyle}>
             <span aria-hidden="true" className="icon-[lucide--calendar] text-base" />
           </AriaButton>
         </Group>
-        <AriaPopover
-          placement="bottom start"
-          offset={8}
-          className={
-            "bg-paper border border-ink-faint " +
-            "shadow-[0_8px_24px_-12px_rgba(26,22,18,0.18)] rounded-none " +
-            "px-4 py-4"
-          }
-        >
+        <AriaPopover placement="bottom start" offset={8} className={datePopoverStyle}>
           <Dialog className="outline-none">
             <Calendar className="flex flex-col gap-3">
               <header className="flex items-center justify-between gap-4">
-                <AriaButton
-                  slot="previous"
-                  className={
-                    "text-ink-mute hover:text-accent data-[focus-visible]:text-accent " +
-                    "data-[disabled]:text-ink-faint data-[disabled]:cursor-not-allowed " +
-                    "transition-colors cursor-pointer outline-none p-1"
-                  }
-                >
-                  <span aria-hidden="true" className="icon-[lucide--chevron-left] text-base" />
-                </AriaButton>
+                <CalendarNavButton slot="previous" icon="icon-[lucide--chevron-left]" />
                 <Heading className="font-display italic text-base text-ink" />
-                <AriaButton
-                  slot="next"
-                  className={
-                    "text-ink-mute hover:text-accent data-[focus-visible]:text-accent " +
-                    "data-[disabled]:text-ink-faint data-[disabled]:cursor-not-allowed " +
-                    "transition-colors cursor-pointer outline-none p-1"
-                  }
-                >
-                  <span aria-hidden="true" className="icon-[lucide--chevron-right] text-base" />
-                </AriaButton>
+                <CalendarNavButton slot="next" icon="icon-[lucide--chevron-right]" />
               </header>
               <CalendarGrid className="border-collapse">
                 <CalendarGridHeader>
@@ -365,18 +363,18 @@ function OnThisDay({ dataset, state }: OnThisDayProps) {
                         isFocusVisible,
                         isHovered,
                       }) =>
-                        cs(
-                          "h-7 w-9 text-center font-mono tabular text-sm cursor-pointer outline-none transition-colors",
+                        cs([
+                          CALENDAR_CELL_BASE,
                           isOutsideMonth
-                            ? "invisible"
+                            ? "invisible pointer-events-none"
                             : isUnavailable || isDisabled
                               ? "text-ink-faint cursor-not-allowed"
                               : isSelected
-                                ? "text-accent border-b border-accent"
+                                ? "text-accent border-b border-accent cursor-pointer"
                                 : isHovered || isFocusVisible
-                                  ? "text-ink bg-paper-deep"
-                                  : "text-ink-quiet",
-                        )
+                                  ? "text-ink bg-paper-deep cursor-pointer"
+                                  : "text-ink-quiet cursor-pointer",
+                        ])
                       }
                     />
                   )}
