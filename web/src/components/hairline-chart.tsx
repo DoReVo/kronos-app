@@ -18,6 +18,7 @@ interface HairlineChartProps {
   primaryLabel?: string;
   hoverFormat?: (index: number) => { date: string; primary: string; compare?: string | null };
   overlay?: { values: number[]; label?: string } | null;
+  peakLabel?: string | undefined;
 }
 
 const DEFAULT_HEIGHT = 320;
@@ -26,8 +27,6 @@ const PADDING_BOTTOM = 22;
 const PADDING_RIGHT = 80;
 const ANNOTATION_OFFSET = 12;
 
-const CURSOR_CROSSHAIR_STYLE = { cursor: "crosshair" } as const;
-const CURSOR_DEFAULT_STYLE = { cursor: "default" } as const;
 const ENDLABEL_STYLE = { letterSpacing: "0.08em", textTransform: "uppercase" } as const;
 const YEARLABEL_STYLE = { letterSpacing: "0.06em" } as const;
 const noop = (): void => {};
@@ -173,6 +172,7 @@ export function HairlineChart({
   primaryLabel,
   hoverFormat,
   overlay = null,
+  peakLabel,
 }: HairlineChartProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [width, setWidth] = useState(800);
@@ -263,8 +263,7 @@ export function HairlineChart({
 
   const handleMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!onHighlight || values.length === 0) return;
-    const rect = containerRef.current?.getBoundingClientRect();
-    if (!rect) return;
+    const rect = e.currentTarget.getBoundingClientRect();
     const ratio = (e.clientX - rect.left) / Math.max(1, plotWidth);
     const i = Math.max(0, Math.min(values.length - 1, Math.round(ratio * (values.length - 1))));
     onHighlight(i);
@@ -273,6 +272,16 @@ export function HairlineChart({
   const handleLeave = () => {
     if (onHighlight) onHighlight(null);
   };
+
+  const overlayStyle = useMemo(
+    () => ({
+      top: PADDING_TOP,
+      bottom: PADDING_BOTTOM,
+      right: PADDING_RIGHT,
+      cursor: onHighlight ? ("crosshair" as const) : ("default" as const),
+    }),
+    [onHighlight],
+  );
 
   const highlightX =
     highlightIndex !== undefined && highlightIndex !== null && values.length > 1
@@ -290,6 +299,28 @@ export function HairlineChart({
     hoverFormat && highlightIndex !== undefined && highlightIndex !== null
       ? hoverFormat(highlightIndex)
       : null;
+
+  const highlightCurveY =
+    highlightIndex !== undefined && highlightIndex !== null
+      ? yAtIndex(values, highlightIndex, innerHeight, max)
+      : null;
+
+  const peakInfo = useMemo(() => {
+    if (values.length === 0 || max <= 0) return null;
+    let peakIdx = 0;
+    let peakVal = values[0] ?? 0;
+    for (let i = 1; i < values.length; i++) {
+      const v = values[i] ?? 0;
+      if (v > peakVal) {
+        peakVal = v;
+        peakIdx = i;
+      }
+    }
+    if (peakVal <= 0) return null;
+    const x = values.length > 1 ? (peakIdx / (values.length - 1)) * plotWidth : 0;
+    const y = yAtIndex(values, peakIdx, innerHeight, max);
+    return { x, y, value: peakVal };
+  }, [values, plotWidth, innerHeight, max]);
 
   return (
     <div ref={containerRef} className="relative w-full" style={svgStyle}>
@@ -359,15 +390,52 @@ export function HairlineChart({
             strokeLinejoin="round"
           />
 
-          {highlightX !== null && (
-            <line
-              x1={highlightX}
-              x2={highlightX}
-              y1={0}
-              y2={innerHeight}
-              stroke="var(--color-accent)"
-              strokeWidth={0.75}
-            />
+          {highlightX !== null && highlightCurveY !== null && (
+            <g>
+              <line
+                x1={highlightX}
+                x2={highlightX}
+                y1={0}
+                y2={highlightCurveY}
+                stroke="var(--color-accent)"
+                strokeWidth={0.75}
+              />
+              <circle
+                cx={highlightX}
+                cy={highlightCurveY}
+                r={2.5}
+                fill="var(--color-accent)"
+                stroke="var(--color-paper)"
+                strokeWidth={1}
+              />
+            </g>
+          )}
+
+          {/* peak callout — mono number floating above the apex */}
+          {peakLabel !== undefined && peakInfo !== null && highlightX === null && (
+            <g>
+              <line
+                x1={peakInfo.x}
+                x2={peakInfo.x}
+                y1={Math.max(0, peakInfo.y - 14)}
+                y2={peakInfo.y}
+                stroke="currentColor"
+                strokeWidth={0.5}
+                strokeOpacity={0.4}
+              />
+              <text
+                x={peakInfo.x}
+                y={Math.max(0, peakInfo.y - 18)}
+                fontFamily="var(--font-mono)"
+                fontSize="10"
+                textAnchor="middle"
+                fill="currentColor"
+                opacity={0.7}
+                style={ENDLABEL_STYLE}
+              >
+                {peakLabel}
+              </text>
+            </g>
           )}
 
           {/* baseline rule extends across plot only */}
@@ -450,12 +518,14 @@ export function HairlineChart({
         />
       )}
 
-      {/* pointer capture overlay */}
+      {/* pointer capture overlay — tracks the plot area only */}
       <div
-        className="absolute inset-0"
+        className="absolute left-0"
         onPointerMove={handleMove}
         onPointerLeave={handleLeave}
-        style={onHighlight ? CURSOR_CROSSHAIR_STYLE : CURSOR_DEFAULT_STYLE}
+        onPointerCancel={handleLeave}
+        onPointerUp={handleLeave}
+        style={overlayStyle}
       />
     </div>
   );

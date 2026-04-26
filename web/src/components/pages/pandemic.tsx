@@ -1,6 +1,27 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useMemo, useState } from "react";
 import { useAtom } from "jotai";
 import { DateTime } from "luxon";
+import {
+  DatePicker,
+  DateInput,
+  DateSegment,
+  Group,
+  Dialog,
+  Calendar,
+  CalendarGrid,
+  CalendarGridHeader,
+  CalendarHeaderCell,
+  CalendarGridBody,
+  CalendarCell,
+  Heading,
+  Popover as AriaPopover,
+  ToggleButton,
+  ToggleButtonGroup,
+  Button as AriaButton,
+} from "react-aria-components";
+import cs from "clsx";
+import type { Key } from "react-aria";
+import { parseDate, type CalendarDate } from "@internationalized/date";
 import type { PandemicDataset, PandemicMetric } from "@kronos/common";
 import { pandemicCompareAtom, pandemicStateAtom, pandemicYearAtom } from "../../atoms";
 import { usePandemic } from "../../hooks/use-pandemic";
@@ -8,16 +29,19 @@ import { Loading } from "../base/loading";
 import { FolioMark, RunningHead } from "../page-frame";
 import { Imprint } from "../imprint";
 import { QueryErrorBoundary } from "../../query/query-provider";
-import { InlinePicker, PickerListItem } from "../inline-picker";
+import { InlinePicker, type InlinePickerItem } from "../inline-picker";
 import { HairlineChart } from "../hairline-chart";
 import { addDays, dayDiff, pickYears, sliceSeries } from "../../lib/pandemic-slice";
 
 const FOLIO = "06";
-const HERO_STYLE = { fontSize: "clamp(4rem,15vw,9rem)" } as const;
+const HERO_STYLE = { fontSize: "clamp(5rem,18vw,13rem)" } as const;
+const HERO_COMPARE_STYLE = { fontSize: "clamp(2.25rem,8vw,5rem)" } as const;
 const METRIC_STYLE = { fontSize: "clamp(1.75rem,4.5vw,2.5rem)" } as const;
+const DATE_INPUT_STYLE = { fontSize: "clamp(1.75rem,5vw,2.5rem)" } as const;
 const CASES_THRESHOLD = 1000;
 const DEATHS_THRESHOLD = 10;
 const CHART_HEIGHT = 320;
+const DEFAULT_LOOKUP_DATE = "2021-08-26";
 
 const NAMED_EVENTS: { date: string; label: string }[] = [
   { date: "2020-03-18", label: "MCO begins" },
@@ -25,6 +49,12 @@ const NAMED_EVENTS: { date: string; label: string }[] = [
   { date: "2021-08-26", label: "delta peak" },
   { date: "2022-04-01", label: "endemic transition" },
 ];
+
+const METRIC_OPTIONS: readonly PandemicMetric[] = ["cases", "deaths"] as const;
+
+function isMetric(v: unknown): v is PandemicMetric {
+  return v === "cases" || v === "deaths";
+}
 
 function fmtInt(n: number): string {
   return new Intl.NumberFormat("en-US").format(Math.round(n));
@@ -40,6 +70,12 @@ function fmtMonthYearShort(iso: string): string {
   return DateTime.fromISO(iso).toLocaleString({ day: "numeric", month: "short", year: "numeric" });
 }
 
+function clampIso(iso: string, min: string, max: string): string {
+  if (iso < min) return min;
+  if (iso > max) return max;
+  return iso;
+}
+
 interface ChapterMarkProps {
   numeral: string;
   title: string;
@@ -47,9 +83,11 @@ interface ChapterMarkProps {
 
 function ChapterMark({ numeral, title }: ChapterMarkProps) {
   return (
-    <div className="flex items-baseline gap-3 pb-2 border-b border-rule">
-      <span className="font-display italic text-2xl text-accent leading-none">{numeral}</span>
-      <span className="kicker text-ink-quiet text-sm">— {title}</span>
+    <div className="relative flex items-end gap-3 border-b border-rule pb-1 mt-4">
+      <span className="font-display italic text-5xl sm:text-6xl text-accent leading-[0.7] -mb-3 select-none">
+        {numeral}
+      </span>
+      <span className="kicker text-ink-quiet text-sm pb-1">— {title}</span>
     </div>
   );
 }
@@ -60,40 +98,41 @@ interface MetricToggleProps {
 }
 
 function MetricToggle({ value, onChange }: MetricToggleProps) {
+  const selectedKeys = useMemo(() => new Set<Key>([value]), [value]);
   return (
-    <div className="flex items-baseline gap-6 select-none">
-      <button
-        type="button"
-        onClick={() => {
-          onChange("cases");
-        }}
-        className={
-          value === "cases"
-            ? "font-display italic text-ink border-b-2 border-accent pb-1 transition-colors cursor-pointer"
-            : "font-display italic text-ink-quiet hover:text-accent transition-colors cursor-pointer"
-        }
-        style={METRIC_STYLE}
-      >
-        cases
-      </button>
-      <span aria-hidden="true" className="text-ink-faint text-2xl">
-        ·
-      </span>
-      <button
-        type="button"
-        onClick={() => {
-          onChange("deaths");
-        }}
-        className={
-          value === "deaths"
-            ? "font-display italic text-ink border-b-2 border-accent pb-1 transition-colors cursor-pointer"
-            : "font-display italic text-ink-quiet hover:text-accent transition-colors cursor-pointer"
-        }
-        style={METRIC_STYLE}
-      >
-        deaths
-      </button>
-    </div>
+    <ToggleButtonGroup
+      selectionMode="single"
+      disallowEmptySelection
+      selectedKeys={selectedKeys}
+      onSelectionChange={(keys) => {
+        const [next] = keys;
+        if (isMetric(next)) onChange(next);
+      }}
+      aria-label="Metric"
+      className="flex items-baseline gap-6 select-none"
+    >
+      {METRIC_OPTIONS.map((m, i) => (
+        <Fragment key={m}>
+          {i > 0 && (
+            <span aria-hidden="true" className="text-ink-faint text-2xl">
+              ·
+            </span>
+          )}
+          <ToggleButton
+            id={m}
+            className={cs([
+              "font-display italic transition-colors cursor-pointer outline-none",
+              "text-ink-quiet hover:text-accent",
+              "data-[focus-visible]:text-accent",
+              "data-[selected]:text-ink data-[selected]:border-b-2 data-[selected]:border-accent data-[selected]:pb-1",
+            ])}
+            style={METRIC_STYLE}
+          >
+            {m}
+          </ToggleButton>
+        </Fragment>
+      ))}
+    </ToggleButtonGroup>
   );
 }
 
@@ -105,30 +144,19 @@ interface YearPickerProps {
 }
 
 function YearPicker({ available, value, onChange, label }: YearPickerProps) {
-  const all: { key: string; label: string }[] = [
-    { key: "all", label: "all years" },
-    ...available.map((y) => ({ key: y, label: y })),
-  ];
+  const items = useMemo<InlinePickerItem[]>(
+    () => [{ key: "all", label: "all years" }, ...available.map((y) => ({ key: y, label: y }))],
+    [available],
+  );
   return (
-    <InlinePicker label={label}>
-      {(close) => (
-        <div className="flex flex-col">
-          <div className="kicker text-ink-mute mb-2">Year</div>
-          {all.map((t) => (
-            <PickerListItem
-              key={t.key}
-              selected={t.key === value}
-              onPress={() => {
-                onChange(t.key);
-                close();
-              }}
-            >
-              {t.label}
-            </PickerListItem>
-          ))}
-        </div>
-      )}
-    </InlinePicker>
+    <InlinePicker
+      trigger={label}
+      ariaLabel="Year"
+      header="Year"
+      items={items}
+      selectedKey={value}
+      onSelect={onChange}
+    />
   );
 }
 
@@ -139,26 +167,19 @@ interface StatePickerProps {
 }
 
 function StatePicker({ states, value, onChange }: StatePickerProps) {
+  const items = useMemo<InlinePickerItem[]>(
+    () => states.map((s) => ({ key: s, label: s })),
+    [states],
+  );
   return (
-    <InlinePicker label={value}>
-      {(close) => (
-        <div className="flex flex-col">
-          <div className="kicker text-ink-mute mb-2">State</div>
-          {states.map((s) => (
-            <PickerListItem
-              key={s}
-              selected={s === value}
-              onPress={() => {
-                onChange(s);
-                close();
-              }}
-            >
-              {s}
-            </PickerListItem>
-          ))}
-        </div>
-      )}
-    </InlinePicker>
+    <InlinePicker
+      trigger={value}
+      ariaLabel="State"
+      header="State"
+      items={items}
+      selectedKey={value}
+      onSelect={onChange}
+    />
   );
 }
 
@@ -169,71 +190,92 @@ interface CompareSlotProps {
 }
 
 function CompareSlot({ states, value, onChange }: CompareSlotProps) {
+  const items = useMemo<InlinePickerItem[]>(
+    () => states.map((s) => ({ key: s, label: s })),
+    [states],
+  );
   if (value === null) {
     return (
-      <InlinePicker label="+ alongside another state">
-        {(close) => (
-          <div className="flex flex-col">
-            <div className="kicker text-ink-mute mb-2">Compare with</div>
-            {states.map((s) => (
-              <PickerListItem
-                key={s}
-                selected={false}
-                onPress={() => {
-                  onChange(s);
-                  close();
-                }}
-              >
-                {s}
-              </PickerListItem>
-            ))}
-          </div>
-        )}
-      </InlinePicker>
+      <InlinePicker
+        trigger="+ alongside another state"
+        ariaLabel="Compare with"
+        header="Compare with"
+        items={items}
+        onSelect={(key) => {
+          onChange(key);
+        }}
+      />
     );
   }
   return (
     <span className="font-display italic text-ink-quiet inline-flex items-baseline gap-2">
       <span>alongside</span>
-      <InlinePicker label={value}>
-        {(close) => (
-          <div className="flex flex-col">
-            <div className="kicker text-ink-mute mb-2">Compare with</div>
-            <PickerListItem
-              selected={false}
-              onPress={() => {
-                onChange(null);
-                close();
-              }}
-            >
-              (none)
-            </PickerListItem>
-            {states.map((s) => (
-              <PickerListItem
-                key={s}
-                selected={s === value}
-                onPress={() => {
-                  onChange(s);
-                  close();
-                }}
-              >
-                {s}
-              </PickerListItem>
-            ))}
-          </div>
-        )}
-      </InlinePicker>
-      <button
-        type="button"
-        onClick={() => {
+      <InlinePicker
+        trigger={value}
+        ariaLabel="Compare with"
+        header="Compare with"
+        items={items}
+        selectedKey={value}
+        onSelect={(key) => {
+          onChange(key);
+        }}
+      />
+      <AriaButton
+        onPress={() => {
           onChange(null);
         }}
-        className="kicker text-ink-faint hover:text-accent transition-colors cursor-pointer"
+        className="kicker text-ink-faint hover:text-accent transition-colors cursor-pointer outline-none data-[focus-visible]:text-accent"
         aria-label="Clear comparison"
       >
         ×
-      </button>
+      </AriaButton>
     </span>
+  );
+}
+
+const dateGroupStyle = cs([
+  "inline-flex items-baseline gap-3",
+  "border-0 border-b border-rule data-[focus-within]:border-accent data-[focus-within]:border-b-2",
+  "py-2 transition-colors",
+]);
+
+const dateSegmentStyle = cs([
+  "px-0.5 outline-none tabular",
+  "data-[type=literal]:text-ink-mute data-[type=literal]:px-0",
+  "data-[placeholder]:text-ink-mute data-[placeholder]:italic",
+  "data-[focused]:bg-accent-soft data-[focused]:text-accent",
+]);
+
+const dateTriggerStyle = cs([
+  "text-ink-mute hover:text-accent data-[focus-visible]:text-accent",
+  "transition-colors cursor-pointer outline-none px-1 self-center",
+]);
+
+const datePopoverStyle = cs([
+  "bg-paper border border-ink-faint",
+  "shadow-[0_8px_24px_-12px_rgba(26,22,18,0.18)] rounded-none",
+  "px-4 py-4",
+]);
+
+const calendarNavStyle = cs([
+  "text-ink-mute hover:text-accent data-[focus-visible]:text-accent",
+  "data-[disabled]:text-ink-faint data-[disabled]:cursor-not-allowed",
+  "transition-colors cursor-pointer outline-none p-1",
+]);
+
+const CALENDAR_CELL_BASE =
+  "h-7 w-9 text-center font-mono tabular text-sm outline-none transition-colors";
+
+interface CalendarNavButtonProps {
+  slot: "previous" | "next";
+  icon: string;
+}
+
+function CalendarNavButton({ slot, icon }: CalendarNavButtonProps) {
+  return (
+    <AriaButton slot={slot} className={calendarNavStyle}>
+      <span aria-hidden="true" className={cs([icon, "text-base"])} />
+    </AriaButton>
   );
 }
 
@@ -246,18 +288,24 @@ function OnThisDay({ dataset, state }: OnThisDayProps) {
   const minDate =
     dataset.cases.from < dataset.deaths.from ? dataset.cases.from : dataset.deaths.from;
   const maxDate = dataset.cases.to > dataset.deaths.to ? dataset.cases.to : dataset.deaths.to;
-  const inputRef = useRef<HTMLInputElement | null>(null);
 
-  const [date, setDate] = useState<string>("2021-08-26");
+  const minCal = useMemo(() => parseDate(minDate), [minDate]);
+  const maxCal = useMemo(() => parseDate(maxDate), [maxDate]);
+  const initialIso = useMemo(
+    () => clampIso(DEFAULT_LOOKUP_DATE, minDate, maxDate),
+    [minDate, maxDate],
+  );
 
-  const valid = date >= minDate && date <= maxDate;
-  const casesIdx = dayDiff(dataset.cases.from, date);
-  const deathsIdx = dayDiff(dataset.deaths.from, date);
+  const [date, setDate] = useState<CalendarDate>(() => parseDate(initialIso));
+  const dateIso = date.toString();
+
+  const casesIdx = dayDiff(dataset.cases.from, dateIso);
+  const deathsIdx = dayDiff(dataset.deaths.from, dateIso);
   const casesValues = dataset.cases.byState[state];
   const deathsValues = dataset.deaths.byState[state];
 
-  const inCasesRange = valid && date >= dataset.cases.from && date <= dataset.cases.to;
-  const inDeathsRange = valid && date >= dataset.deaths.from && date <= dataset.deaths.to;
+  const inCasesRange = dateIso >= dataset.cases.from && dateIso <= dataset.cases.to;
+  const inDeathsRange = dateIso >= dataset.deaths.from && dateIso <= dataset.deaths.to;
 
   const casesValue =
     inCasesRange && casesValues !== undefined && casesIdx >= 0 && casesIdx < casesValues.length
@@ -268,72 +316,105 @@ function OnThisDay({ dataset, state }: OnThisDayProps) {
       ? (deathsValues[deathsIdx] ?? 0)
       : null;
 
-  const openPicker = () => {
-    const el = inputRef.current;
-    if (el && typeof el.showPicker === "function") {
-      el.showPicker();
-    } else {
-      el?.focus();
-    }
-  };
-
   return (
     <section className="flex flex-col gap-6">
       <div className="font-display italic text-ink-quiet text-base sm:text-lg max-w-[44ch]">
         Where the country stood on a particular day, set against the rest of the record.
       </div>
-      <div className="relative inline-flex items-baseline gap-3 max-w-xs">
-        <input
-          ref={inputRef}
-          type="date"
-          value={date}
-          min={minDate}
-          max={maxDate}
-          onChange={(e) => {
-            setDate(e.target.value);
-          }}
-          className="kronos-bare-date bg-transparent border-0 border-b border-rule focus:border-accent focus:border-b-2 outline-none font-display italic text-lg text-ink py-2 px-0 transition-colors flex-1"
-        />
-        <button
-          type="button"
-          onClick={openPicker}
-          className="text-ink-mute hover:text-accent transition-colors cursor-pointer"
-          aria-label="Open date picker"
-        >
-          <span aria-hidden="true" className="icon-[lucide--calendar] text-base" />
-        </button>
+      <DatePicker
+        value={date}
+        onChange={(d) => {
+          // Calendar always shows a date; ignore null (e.g. invalid clears).
+          if (d !== null) setDate(d);
+        }}
+        minValue={minCal}
+        maxValue={maxCal}
+        aria-label="Date"
+      >
+        <Group className={dateGroupStyle}>
+          <DateInput
+            className="inline-flex items-baseline gap-px font-display italic text-ink"
+            style={DATE_INPUT_STYLE}
+          >
+            {(segment) => <DateSegment segment={segment} className={dateSegmentStyle} />}
+          </DateInput>
+          <AriaButton className={dateTriggerStyle}>
+            <span aria-hidden="true" className="icon-[lucide--calendar] text-lg" />
+          </AriaButton>
+        </Group>
+        <AriaPopover placement="bottom" offset={6} className={datePopoverStyle}>
+          <Dialog className="outline-none">
+            <Calendar className="flex flex-col gap-3">
+              <header className="flex items-center justify-between gap-4">
+                <CalendarNavButton slot="previous" icon="icon-[lucide--chevron-left]" />
+                <Heading className="font-display italic text-base text-ink" />
+                <CalendarNavButton slot="next" icon="icon-[lucide--chevron-right]" />
+              </header>
+              <CalendarGrid className="border-collapse">
+                <CalendarGridHeader>
+                  {(day) => (
+                    <CalendarHeaderCell className="kicker text-ink-mute pb-2 px-1 text-center">
+                      {day}
+                    </CalendarHeaderCell>
+                  )}
+                </CalendarGridHeader>
+                <CalendarGridBody>
+                  {(d) => (
+                    <CalendarCell
+                      date={d}
+                      className={({
+                        isSelected,
+                        isOutsideMonth,
+                        isUnavailable,
+                        isDisabled,
+                        isFocusVisible,
+                        isHovered,
+                      }) =>
+                        cs([
+                          CALENDAR_CELL_BASE,
+                          isOutsideMonth
+                            ? "invisible pointer-events-none"
+                            : isUnavailable || isDisabled
+                              ? "text-ink-faint cursor-not-allowed"
+                              : isSelected
+                                ? "text-accent border-b border-accent cursor-pointer"
+                                : isHovered || isFocusVisible
+                                  ? "text-ink bg-paper-deep cursor-pointer"
+                                  : "text-ink-quiet cursor-pointer",
+                        ])
+                      }
+                    />
+                  )}
+                </CalendarGridBody>
+              </CalendarGrid>
+            </Calendar>
+          </Dialog>
+        </AriaPopover>
+      </DatePicker>
+      <div className="grid grid-cols-2 gap-6">
+        <div className="flex flex-col">
+          <span className="kicker text-ink-mute">Cases</span>
+          <span className="font-display italic text-xl sm:text-2xl text-ink tabular mt-1">
+            {casesValue === null ? "—" : fmtInt(casesValue)}
+          </span>
+          {!inCasesRange && (
+            <span className="marginalia mt-1">
+              cases record ended {fmtMonthYearShort(dataset.cases.to)}
+            </span>
+          )}
+        </div>
+        <div className="flex flex-col">
+          <span className="kicker text-ink-mute">Deaths</span>
+          <span className="font-display italic text-xl sm:text-2xl text-ink tabular mt-1">
+            {deathsValue === null ? "—" : fmtInt(deathsValue)}
+          </span>
+          {!inDeathsRange && (
+            <span className="marginalia mt-1">
+              deaths record ended {fmtMonthYearShort(dataset.deaths.to)}
+            </span>
+          )}
+        </div>
       </div>
-      {!valid && (
-        <div className="font-display italic text-ink-quiet">
-          The record does not extend to that day.
-        </div>
-      )}
-      {valid && (
-        <div className="grid grid-cols-2 gap-6">
-          <div className="flex flex-col">
-            <span className="kicker text-ink-mute">Cases</span>
-            <span className="font-display italic text-3xl sm:text-4xl text-ink tabular mt-1">
-              {casesValue === null ? "—" : fmtInt(casesValue)}
-            </span>
-            {!inCasesRange && (
-              <span className="marginalia mt-1">
-                cases record ended {fmtMonthYearShort(dataset.cases.to)}
-              </span>
-            )}
-          </div>
-          <div className="flex flex-col">
-            <span className="kicker text-ink-mute">Deaths</span>
-            <span className="font-display italic text-3xl sm:text-4xl text-ink tabular mt-1">
-              {deathsValue === null ? "—" : fmtInt(deathsValue)}
-            </span>
-            {!inDeathsRange && (
-              <span className="marginalia mt-1">
-                deaths record ended {fmtMonthYearShort(dataset.deaths.to)}
-              </span>
-            )}
-          </div>
-        </div>
-      )}
     </section>
   );
 }
@@ -357,7 +438,7 @@ function PageContent() {
     () => (series === null ? null : sliceSeries(series, state, effectiveYear, threshold)),
     [series, state, effectiveYear, threshold],
   );
-  const effectiveCompare = compare !== null && compare !== "" && compare !== state ? compare : null;
+  const effectiveCompare = compare !== null && compare !== state ? compare : null;
   const compareSlice = useMemo(
     () =>
       series !== null && effectiveCompare !== null
@@ -423,6 +504,8 @@ function PageContent() {
     ? fmtDate(slice.peak.date, { day: "numeric", month: "long", year: "numeric" })
     : "—";
 
+  const totalDaysObserved = dayDiff(dataset.cases.from, dataset.cases.to) + 1;
+
   return (
     <div className="reveal-stack mx-auto w-full max-w-3xl flex flex-col gap-14">
       <RunningHead section="Pandemic" folio={FOLIO} />
@@ -432,6 +515,14 @@ function PageContent() {
         <div className="kicker text-ink-mute">SARS-CoV-2 · Malaysia</div>
         <div className="font-display italic text-2xl sm:text-3xl text-ink-quiet max-w-[42ch] mx-auto">
           A standing record of cases and deaths, set from MoH&rsquo;s linelists.
+        </div>
+        <div className="kicker text-ink-faint tabular flex items-center justify-center gap-3 mt-1">
+          <span>Volume {FOLIO}</span>
+          <span aria-hidden="true">·</span>
+          <span className="font-mono not-italic">{fmtInt(totalDaysObserved)}</span>
+          <span>days observed</span>
+          <span aria-hidden="true">·</span>
+          <span>{dataset.states.length} states</span>
         </div>
       </header>
 
@@ -453,11 +544,21 @@ function PageContent() {
             recorded
           </p>
 
-          <div
-            className="font-display italic text-ink tabular leading-[0.92] tracking-tight text-center"
-            style={HERO_STYLE}
-          >
-            {fmtInt(slice.total)}
+          <div className="flex flex-col items-center leading-[0.86]">
+            <div className="font-display italic text-ink tabular tracking-tight" style={HERO_STYLE}>
+              {fmtInt(slice.total)}
+            </div>
+            {compareSlice !== null && effectiveCompare !== null && (
+              <div
+                className="font-display italic text-accent tabular tracking-tight mt-2"
+                style={HERO_COMPARE_STYLE}
+              >
+                <span aria-hidden="true" className="text-ink-faint mr-3">
+                  ·
+                </span>
+                {fmtInt(compareSlice.total)}
+              </div>
+            )}
           </div>
 
           <div className="flex flex-col items-center gap-3">
@@ -510,9 +611,9 @@ function PageContent() {
       </section>
 
       {/* II — The curve */}
-      <section className="flex flex-col gap-5">
+      <section className="flex flex-col gap-5 xl:relative">
         <ChapterMark numeral="II" title="The curve" />
-        <div className="flex items-baseline gap-3">
+        <div className="flex items-baseline gap-3 xl:hidden">
           <span className="font-display italic text-ink-quiet text-base">
             Daily {metric}, drawn at hairline weight.
           </span>
@@ -521,6 +622,25 @@ function PageContent() {
             {fmtMonthYearShort(slice.from)} — {fmtMonthYearShort(slice.to)}
           </span>
         </div>
+        <span className="hidden xl:block font-display italic text-ink-quiet text-base">
+          Daily {metric}, drawn at hairline weight.
+        </span>
+        <aside className="hidden xl:flex xl:flex-col xl:gap-1 xl:absolute xl:left-full xl:ml-6 xl:top-12 xl:w-44">
+          <span className="kicker text-ink-mute">Period</span>
+          <span className="marginalia">{fmtMonthYearShort(slice.from)}</span>
+          <span className="marginalia">— {fmtMonthYearShort(slice.to)}</span>
+          {slice.peak !== null && (
+            <>
+              <span className="kicker text-ink-mute mt-3">Peak</span>
+              <span className="marginalia">
+                {fmtInt(slice.peak.value)} {metric}
+              </span>
+              <span className="marginalia text-ink-faint">
+                {fmtDate(slice.peak.date, { day: "numeric", month: "short", year: "numeric" })}
+              </span>
+            </>
+          )}
+        </aside>
         <HairlineChart
           values={slice.values}
           height={CHART_HEIGHT}
@@ -533,6 +653,7 @@ function PageContent() {
           primaryLabel={state}
           overlay={overlayProp}
           hoverFormat={formatHover}
+          peakLabel={slice.peak === null ? undefined : `${fmtInt(slice.peak.value)} ↑`}
         />
       </section>
 
@@ -545,10 +666,10 @@ function PageContent() {
       <section className="border-t border-rule-soft pt-8 flex flex-col gap-2">
         <span className="kicker text-ink-mute">Source</span>
         <p className="font-display italic text-sm text-ink-quiet leading-relaxed max-w-[58ch]">
-          <span className="float-left font-display not-italic font-normal text-[2.5rem] leading-[0.78] text-accent mr-2 mt-[0.2rem] select-none">
+          <span className="float-left font-display not-italic font-normal text-[3.5rem] leading-[0.72] text-accent mr-3 mt-[0.18rem] select-none">
             M
           </span>
-          oH Malaysia, via{" "}
+          <span className="small-caps not-italic text-ink tracking-wide">oH Malaysia</span>, via{" "}
           <a
             href="https://data.gov.my"
             className="text-accent hover:underline"

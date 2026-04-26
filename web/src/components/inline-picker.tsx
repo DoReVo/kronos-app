@@ -1,25 +1,38 @@
+import { useMemo } from "react";
 import {
   Button as AriaButton,
+  Header as AriaHeader,
+  Menu as AriaMenu,
+  MenuItem as AriaMenuItem,
+  MenuTrigger,
   Popover as AriaPopover,
-  Dialog as AriaDialog,
-  DialogTrigger,
 } from "react-aria-components";
-import type { ReactNode } from "react";
+import type { Key, Selection } from "react-aria-components";
 import cs from "clsx";
 
-interface InlinePickerProps {
+export interface InlinePickerItem {
+  key: string;
   label: string;
-  className?: string;
-  children: (close: () => void) => ReactNode;
 }
 
-const triggerBase = cs([
+interface InlinePickerProps {
+  trigger: string;
+  ariaLabel: string;
+  header?: string;
+  items: InlinePickerItem[];
+  selectedKey?: string | null;
+  onSelect: (key: string) => void;
+  className?: string;
+}
+
+const triggerStyle = cs([
   "font-display italic",
   "border-b border-dotted border-rule",
   "transition-colors",
   "outline-none cursor-pointer",
   "text-ink hover:text-accent hover:border-accent",
-  "focus-visible:outline focus-visible:outline-1 focus-visible:outline-accent focus-visible:outline-offset-2",
+  "data-[focus-visible]:text-accent data-[focus-visible]:border-accent",
+  "data-[pressed]:text-accent",
 ]);
 
 const popoverStyle = cs([
@@ -30,37 +43,70 @@ const popoverStyle = cs([
   "px-3 py-3",
 ]);
 
-export function InlinePicker({ label, className, children }: InlinePickerProps) {
-  return (
-    <DialogTrigger>
-      <AriaButton className={cs(triggerBase, className)}>{label}</AriaButton>
-      <AriaPopover className={popoverStyle} placement="bottom start" offset={8}>
-        <AriaDialog className="outline-none">{({ close }) => children(close)}</AriaDialog>
-      </AriaPopover>
-    </DialogTrigger>
+const headerStyle = cs(["kicker text-ink-mute mb-2 block"]);
+
+const menuStyle = cs(["outline-none flex flex-col"]);
+
+const itemStyle = ({
+  isHovered,
+  isFocused,
+  isSelected,
+}: {
+  isHovered: boolean;
+  isFocused: boolean;
+  isSelected: boolean;
+}): string =>
+  cs([
+    "block w-full text-left px-2 py-1 transition-colors cursor-pointer outline-none",
+    "font-body text-sm",
+    "border-l-2",
+    isSelected
+      ? "text-accent border-accent pl-1.5"
+      : cs([
+          "border-transparent",
+          isHovered || isFocused ? "text-ink bg-paper-deep" : "text-ink-quiet",
+        ]),
+  ]);
+
+export function InlinePicker({
+  trigger,
+  ariaLabel,
+  header,
+  items,
+  selectedKey,
+  onSelect,
+  className,
+}: InlinePickerProps) {
+  const selectedKeys = useMemo<Iterable<Key>>(
+    () => (selectedKey === null || selectedKey === undefined ? [] : [selectedKey]),
+    [selectedKey],
   );
-}
+  const handleChange = (keys: Selection): void => {
+    if (keys === "all") return;
+    const [first] = keys;
+    if (typeof first === "string") onSelect(first);
+  };
 
-interface PickerListItemProps {
-  selected: boolean;
-  onPress: () => void;
-  children: ReactNode;
-}
-
-export function PickerListItem({ selected, onPress, children }: PickerListItemProps) {
   return (
-    <button
-      type="button"
-      onClick={onPress}
-      className={cs(
-        "block w-full text-left px-2 py-1 transition-colors cursor-pointer outline-none",
-        "font-body text-sm",
-        selected
-          ? "text-accent border-l-2 border-accent pl-1.5"
-          : "text-ink-quiet hover:text-ink hover:bg-paper-deep border-l-2 border-transparent",
-      )}
-    >
-      {children}
-    </button>
+    <MenuTrigger>
+      <AriaButton className={cs(triggerStyle, className)}>{trigger}</AriaButton>
+      <AriaPopover className={popoverStyle} placement="bottom start" offset={8}>
+        {header !== undefined && <AriaHeader className={headerStyle}>{header}</AriaHeader>}
+        <AriaMenu
+          aria-label={ariaLabel}
+          className={menuStyle}
+          selectionMode="single"
+          disallowEmptySelection
+          selectedKeys={selectedKeys}
+          onSelectionChange={handleChange}
+        >
+          {items.map((item) => (
+            <AriaMenuItem key={item.key} id={item.key} textValue={item.label} className={itemStyle}>
+              {item.label}
+            </AriaMenuItem>
+          ))}
+        </AriaMenu>
+      </AriaPopover>
+    </MenuTrigger>
   );
 }
