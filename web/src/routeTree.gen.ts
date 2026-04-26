@@ -10,12 +10,18 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as PrayerTimeRouteImport } from './routes/prayer-time'
+import { Route as PandemicRouteImport } from './routes/pandemic'
 import { Route as CurrencyRouteImport } from './routes/currency'
 import { Route as IndexRouteImport } from './routes/index'
 
 const PrayerTimeRoute = PrayerTimeRouteImport.update({
   id: '/prayer-time',
   path: '/prayer-time',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PandemicRoute = PandemicRouteImport.update({
+  id: '/pandemic',
+  path: '/pandemic',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CurrencyRoute = CurrencyRouteImport.update({
@@ -32,30 +38,34 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/currency': typeof CurrencyRoute
+  '/pandemic': typeof PandemicRoute
   '/prayer-time': typeof PrayerTimeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/currency': typeof CurrencyRoute
+  '/pandemic': typeof PandemicRoute
   '/prayer-time': typeof PrayerTimeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/currency': typeof CurrencyRoute
+  '/pandemic': typeof PandemicRoute
   '/prayer-time': typeof PrayerTimeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/currency' | '/prayer-time'
+  fullPaths: '/' | '/currency' | '/pandemic' | '/prayer-time'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/currency' | '/prayer-time'
-  id: '__root__' | '/' | '/currency' | '/prayer-time'
+  to: '/' | '/currency' | '/pandemic' | '/prayer-time'
+  id: '__root__' | '/' | '/currency' | '/pandemic' | '/prayer-time'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CurrencyRoute: typeof CurrencyRoute
+  PandemicRoute: typeof PandemicRoute
   PrayerTimeRoute: typeof PrayerTimeRoute
 }
 
@@ -66,6 +76,13 @@ declare module '@tanstack/react-router' {
       path: '/prayer-time'
       fullPath: '/prayer-time'
       preLoaderRoute: typeof PrayerTimeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pandemic': {
+      id: '/pandemic'
+      path: '/pandemic'
+      fullPath: '/pandemic'
+      preLoaderRoute: typeof PandemicRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/currency': {
@@ -88,6 +105,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CurrencyRoute: CurrencyRoute,
+  PandemicRoute: PandemicRoute,
   PrayerTimeRoute: PrayerTimeRoute,
 }
 export const routeTree = rootRouteImport

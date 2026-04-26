@@ -7,6 +7,8 @@ import { DateTime } from "luxon";
 import { CustomTimeProvider } from "./lib/time";
 import { JakimProvider } from "./lib/jakim";
 import { ExchangeRateProvider } from "./lib/exchange-rate";
+import { PandemicProvider } from "./lib/pandemic";
+import { refreshAll } from "./lib/cron-registry";
 import { TimeNotFound, UpstreamParseError } from "./errors/errors";
 
 const server = new Hono();
@@ -96,4 +98,15 @@ server.get("/currency/rates", async (c) => {
   return c.json(rates);
 });
 
-export default server;
+server.get("/pandemic/all", async (c) => {
+  const provider = new PandemicProvider();
+  const data = await provider.getDataset();
+  return c.json(data);
+});
+
+export default {
+  fetch: server.fetch,
+  scheduled(_event: ScheduledController, _env: unknown, ctx: ExecutionContext): void {
+    ctx.waitUntil(refreshAll());
+  },
+};

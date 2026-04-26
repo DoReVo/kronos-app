@@ -46,3 +46,21 @@ export const currencyToAtom = atomWithStorage<string>(
   "MYR",
   makeStorage<string>(),
 );
+
+export const pandemicStateAtom = atomWithStorage<string>(
+  "kronos_pandemic_state",
+  "Malaysia",
+  makeStorage<string>(),
+);
+
+export const pandemicCompareAtom = atomWithStorage<string | null>(
+  "kronos_pandemic_compare",
+  null,
+  makeStorage<string | null>(),
+);
+
+export const pandemicYearAtom = atomWithStorage<string>(
+  "kronos_pandemic_year",
+  "all",
+  makeStorage<string>(),
+);

@@ -23,6 +23,36 @@ export const CurrencyRatesSchema = z.object({
 
 export type CurrencyRates = z.infer<typeof CurrencyRatesSchema>;
 
+export const PandemicMetricSchema = z.enum(["cases", "deaths"]);
+export type PandemicMetric = z.infer<typeof PandemicMetricSchema>;
+
+export const PandemicSeriesSchema = z.object({
+  from: z.string(),
+  to: z.string(),
+  byState: z.record(z.string(), z.array(z.number())),
+});
+
+export const PandemicMetaSchema = z.object({
+  source: z.string(),
+  sourceUrls: z.object({ cases: z.string(), deaths: z.string() }),
+  ingestedAt: z.iso.datetime({ offset: true }),
+  casesFrom: z.string(),
+  casesTo: z.string(),
+  deathsFrom: z.string(),
+  deathsTo: z.string(),
+});
+
+export const PandemicDatasetSchema = z.object({
+  meta: PandemicMetaSchema,
+  states: z.array(z.string()),
+  cases: PandemicSeriesSchema,
+  deaths: PandemicSeriesSchema,
+});
+
+export type PandemicDataset = z.infer<typeof PandemicDatasetSchema>;
+export type PandemicSeries = z.infer<typeof PandemicSeriesSchema>;
+export type PandemicMeta = z.infer<typeof PandemicMetaSchema>;
+
 export const ZoneSchema = z.enum([
   "JHR01",
   "JHR02",

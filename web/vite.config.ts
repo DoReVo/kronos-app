@@ -32,7 +32,7 @@ export default defineConfig(({ mode }) => {
       return "http://localhost:4305";
     }
   })();
-  const apiPattern = new RegExp(`^${escapeRegex(apiOrigin)}/(time|currency)/`);
+  const apiPattern = new RegExp(`^${escapeRegex(apiOrigin)}/(time|currency|pandemic)/`);
 
   return {
     define: {
@@ -120,6 +120,13 @@ export default defineConfig(({ mode }) => {
               url: "/currency?source=shortcut",
               description: "FX rates against the United States dollar.",
               icons: [{ src: "/shortcut-04.svg", sizes: "96x96", type: "image/svg+xml" }],
+            },
+            {
+              name: "Pandemic Record",
+              short_name: "Pandemic",
+              url: "/pandemic?source=shortcut",
+              description: "Malaysian COVID-19 cases and deaths, 2020–2025.",
+              icons: [{ src: "/shortcut-06.svg", sizes: "96x96", type: "image/svg+xml" }],
             },
           ],
           screenshots: [

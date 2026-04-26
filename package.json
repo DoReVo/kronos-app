@@ -2,9 +2,16 @@
   "name": "kronos",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
-  "packageManager": "npm@11.3.0",
+  "keywords": [],
+  "license": "ISC",
+  "author": "",
+  "workspaces": [
+    "api",
+    "web",
+    "common"
+  ],
   "type": "module",
+  "main": "index.js",
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run build --filter=@kronos/common --no-daemon && turbo run dev",
@@ -17,14 +24,6 @@
     "start:web": "npm run dev -w web",
     "prepare": "lefthook install"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "workspaces": [
-    "api",
-    "web",
-    "common"
-  ],
   "dependencies": {
     "ky": "^2.0.2",
     "luxon": "^3.7.2"
@@ -37,5 +36,6 @@
     "oxlint-tsgolint": "^0.22.0",
     "turbo": "^2.9.6",
     "vitest": "^4.1.5"
-  }
+  },
+  "packageManager": "npm@11.3.0"
 }

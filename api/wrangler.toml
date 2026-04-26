@@ -16,3 +16,6 @@ enabled = true
 [[kv_namespaces]]
 binding = "kronos"
 id = "3a29917d96cb494ba2620195b32d447e"
+
+[triggers]
+crons = ["0 18 * * *"]
