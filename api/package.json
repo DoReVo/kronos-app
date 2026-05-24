@@ -11,17 +11,17 @@
     "format:check": "oxfmt --check . '!worker-configuration.d.ts'"
   },
   "dependencies": {
-    "@hono/zod-validator": "^0.7.6",
+    "@hono/zod-validator": "^0.8.0",
     "@kronos/common": "^1.0.0",
     "@types/luxon": "^3.7.1",
-    "hono": "^4.12.15",
-    "hyparquet": "^1.25.6",
+    "hono": "^4.12.22",
+    "hyparquet": "^1.26.0",
     "hyparquet-compressors": "^1.1.1",
     "luxon": "^3.7.2",
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@cloudflare/vitest-pool-workers": "^0.15.0",
+    "@cloudflare/vitest-pool-workers": "^0.16.9",
     "wrangler": "^4.85.0"
   }
 }
