@@ -25,10 +25,10 @@
     "ky": "^2.0.2",
     "luxon": "^3.7.2",
     "motion": "^12.38.0",
-    "react": "^19.2.6",
+    "react": "^19.2.7",
     "react-aria": "^3.48.0",
     "react-aria-components": "^1.17.0",
-    "react-dom": "^19.2.6",
+    "react-dom": "^19.2.7",
     "react-error-boundary": "^6.1.1"
   },
   "devDependencies": {
@@ -37,7 +37,7 @@
     "@tailwindcss/vite": "^4.2.4",
     "@tanstack/react-router-devtools": "^1.167.0",
     "@tanstack/router-plugin": "^1.168.18",
-    "@types/react": "^19.2.15",
+    "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vite-pwa/assets-generator": "^1.0.2",
     "@vitejs/plugin-react": "^6.0.1",
