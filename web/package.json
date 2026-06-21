@@ -18,7 +18,7 @@
     "@kronos/common": "^1.0.0",
     "@tanstack/react-query": "^5.101.0",
     "@tanstack/react-query-persist-client": "^5.101.0",
-    "@tanstack/react-router": "^1.170.15",
+    "@tanstack/react-router": "^1.170.16",
     "@uidotdev/usehooks": "^2.4.1",
     "idb-keyval": "^6.2.2",
     "jotai": "^2.19.1",
